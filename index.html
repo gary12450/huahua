@@ -1453,7 +1453,7 @@
                                 return `
             <label class="checkbox-item" data-grade="${gradeChar}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 <input type="checkbox" name="member-flower-select" value="${f.name}"
-                    ${member && member.ownedFlowers && member.ownedFlowers.includes(f.name) ? 'checked' : ''}
+                    ${member && listHasFlower(member.ownedFlowers, f.name) ? 'checked' : ''}
                     ${isLocked ? 'disabled' : ''}>
                 <span style="margin-left:4px; font-size: 13px;">${f.name}</span>
             </label>
@@ -2079,7 +2079,7 @@ function renderFlowers() {
     if (addBtn) addBtn.style.display = isAdmin() ? '' : 'none';
 
     flowers.forEach(flower => {
-        const owners = members.filter(m => m.ownedFlowers && m.ownedFlowers.includes(flower.name)).map(m => m.gameName);
+        const owners = members.filter(m => listHasFlower(m.ownedFlowers, flower.name)).map(m => m.gameName);
         const gradeClass = 'grade-' + getGradeColorClass(flower.grade);
 
         // ✨ 誰擁有改成標籤＋數量：👤 N（0 顯示「無」），點擊開啟花朵詳情卡（含擁有者名單）
@@ -2253,7 +2253,7 @@ function renderFlowers() {
                         const flower = flowers.find(f => f.id === id);
                         if (!flower) return;
 
-                        const owners = members.filter(m => m.ownedFlowers && m.ownedFlowers.includes(flower.name)).map(m => m.gameName);
+                        const owners = members.filter(m => listHasFlower(m.ownedFlowers, flower.name)).map(m => m.gameName);
                         const gradeColor = getGradeColorCode(flower.grade);
 
                         const html = `
@@ -2279,16 +2279,12 @@ function renderFlowers() {
                         const comp = competitions.find(c => c.id === id);
                         if (!comp) return;
 
-                        // 產生花朵標籤 (只顯示名字和顏色，不顯示分數)
-                        const flowerListHtml = comp.selectedFlowers.map(fName => {
-                            const fInfo = flowers.find(f => f.name === fName);
-                            const color = fInfo ? getGradeColorCode(fInfo.grade) : '#666';
-
-                            return `<span class="flower-tag" style="border-color:${color}40;">
-                                        <span style="width:8px; height:8px; background:${color}; border-radius:50%; margin-right:6px;"></span>
-                                        ${fName}
-                                    </span>`;
-                        }).join('');
+                        // ✨ 參賽花朵清單：比照「擁有的花朵」標籤(generateFlowerTags)，
+                        //    並依花朵清單競賽分數高→低排序、同分用名稱(中文)排序
+                        const sortedFlowers = sortOwnedByScore(comp.selectedFlowers);
+                        const flowerListHtml = comp.selectedFlowers.length > 0
+                            ? generateFlowerTags(sortedFlowers)
+                            : '';
 
                         const html = `
                                     <div class="modal-header">
@@ -2323,10 +2319,32 @@ function renderFlowers() {
                         document.getElementById('universal-modal').classList.remove('show');
                     }
 
+                    // ✨ 花名容錯比對：包容全形／半形點（．。・.）與多餘空白的差異，
+                    //    避免成員/競賽存的花名標點與花朵清單不一致時對不到花（造成顏色變灰、誰擁有少算）
+                    function normalizeFlowerName(s) {
+                        return String(s == null ? '' : s)
+                            .replace(/[．。・･]/g, '.')
+                            .replace(/\s+/g, '')
+                            .toLowerCase();
+                    }
+                    function findFlowerByName(name) {
+                        let f = flowers.find(x => x.name === name);
+                        if (f) return f;
+                        const key = normalizeFlowerName(name);
+                        return flowers.find(x => normalizeFlowerName(x.name) === key);
+                    }
+                    // 清單（成員 ownedFlowers／競賽 selectedFlowers）是否包含某花，容錯比對
+                    function listHasFlower(list, name) {
+                        if (!Array.isArray(list)) return false;
+                        if (list.includes(name)) return true;
+                        const key = normalizeFlowerName(name);
+                        return list.some(n => normalizeFlowerName(n) === key);
+                    }
+
                     function generateFlowerTags(flowerList) {
                         if (!flowerList || flowerList.length === 0) return '<span style="color:#999; font-size:13px;">無</span>';
                         return flowerList.map(fName => {
-                            const fInfo = flowers.find(f => f.name === fName);
+                            const fInfo = findFlowerByName(fName);
                             const color = fInfo ? getGradeColorCode(fInfo.grade) : '#374151';
                             return `<span class="flower-tag" style="color:${color}; border-color:${color}30; background:${color}08;">${fName}</span>`;
                         }).join('');
@@ -2345,8 +2363,8 @@ function renderFlowers() {
                     function sortOwnedByScore(flowerNames) {
                         if (!Array.isArray(flowerNames)) return [];
                         return flowerNames.slice().sort((a, b) => {
-                            const fa = flowers.find(f => f.name === a);
-                            const fb = flowers.find(f => f.name === b);
+                            const fa = findFlowerByName(a);
+                            const fb = findFlowerByName(b);
                             const sa = fa ? (parseInt(fa.competitionScore) || 0) : 0;
                             const sb = fb ? (parseInt(fb.competitionScore) || 0) : 0;
                             if (sb !== sa) return sb - sa;          // 競賽分數：高 → 低
@@ -2604,7 +2622,7 @@ function openDistributeModal(flowerId) {
 
     // 產生成員列表 HTML
     const membersHtml = members.map(m => {
-        const hasFlower = m.ownedFlowers && m.ownedFlowers.includes(flower.name);
+        const hasFlower = listHasFlower(m.ownedFlowers, flower.name);
         return `
             <label class="checkbox-item" style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px dashed #eee;">
                 <div style="display:flex; align-items:center;">
@@ -2661,12 +2679,12 @@ async function saveFlowerDistribution() {
     members.forEach(m => {
         const shouldHave = checkedMemberIds.includes(String(m.id));
         const owned = Array.isArray(m.ownedFlowers) ? m.ownedFlowers : [];
-        const actuallyHas = owned.includes(flower.name);
+        const actuallyHas = listHasFlower(owned, flower.name);
 
         if (shouldHave && !actuallyHas) {
             changes.push({ member: m, newOwned: owned.concat([flower.name]) });
         } else if (!shouldHave && actuallyHas) {
-            changes.push({ member: m, newOwned: owned.filter(f => f !== flower.name) });
+            changes.push({ member: m, newOwned: owned.filter(f => normalizeFlowerName(f) !== normalizeFlowerName(flower.name)) });
         }
     });
 
