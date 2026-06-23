@@ -221,6 +221,13 @@
             border-collapse: collapse;
         }
 
+        /* ✨ 表格水平捲軸容器：桌機剛好滿版不出現捲軸；手機欄位變寬時可往右捲動查看 */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         thead {
             background-color: #f3f4f6;
             border-bottom: 1px solid #d1d5db;
@@ -793,7 +800,7 @@
         }
         .checked-only-toggle input { width: auto !important; }
 
-        /* ✨ 1. 手機版 RWD：三個資料表格改成卡片式 (max-width: 768px) */
+        /* ✨ 手機版 RWD：表格維持「表格樣式」，欄位往右展開，超出畫面用水平捲軸查看 (max-width: 768px) */
         @media (max-width: 768px) {
             body { padding: 12px; }
             h1 { font-size: 26px; }
@@ -801,108 +808,24 @@
             .tabs { overflow-x: auto; }
             .tab { padding: 10px 14px; font-size: 15px; white-space: nowrap; }
 
-            /* 讓三個表格脫離 table 排版，改成卡片堆疊 */
-            #members-content table,
-            #flowers-content table,
-            #competitions-content table {
-                border: none;
-                background: transparent;
+            /* 不再轉成卡片式：欄位依內容自然寬度展開，整體超出畫面時由 .table-scroll 提供水平捲軸 */
+            #members-table td,
+            #flowers-table td,
+            #competitions-table td {
+                max-width: none; /* 解除截斷，讓欄位完整顯示，右邊有資料就往右捲動查看 */
             }
-            #members-content thead,
-            #flowers-content thead,
-            #competitions-content thead {
-                display: none; /* 隱藏表頭列 */
+
+            /* 新增／編輯表單列：固定貼齊視窗左側、寬度限制在視窗內，避免被寬表格推到畫面外才看得到 */
+            tr.form-row td {
+                padding: 0 !important;
             }
-            #members-table,
-            #flowers-table,
-            #competitions-table {
-                display: block;
+            tr.form-row td > .form-container {
+                position: sticky;
+                left: 0;
+                width: calc(100vw - 24px); /* 視窗寬扣掉 body 左右 padding（12px×2） */
+                box-sizing: border-box;
             }
-            /* 每一列 => 一張卡片 */
-            #members-table > tr,
-            #flowers-table > tr,
-            #competitions-table > tr {
-                display: block;
-                background: #fff;
-                border: 1px solid #d1d5db;
-                border-radius: 10px;
-                padding: 10px 14px;
-                margin-bottom: 12px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            }
-            #members-table > tr:hover,
-            #flowers-table > tr:hover,
-            #competitions-table > tr:hover {
-                background: #fff; /* 手機卡片不需 hover 變色 */
-            }
-            /* 每一格 => 一行「欄位名：值」 */
-            #members-table > tr > td,
-            #flowers-table > tr > td,
-            #competitions-table > tr > td {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 12px;
-                height: auto !important;
-                line-height: 1.5 !important;
-                max-width: none !important;
-                white-space: normal !important;
-                overflow: visible !important;
-                text-overflow: clip !important;
-                padding: 6px 0 !important;
-                border-bottom: 1px dashed #f0f0f0;
-                text-align: right;
-            }
-            #members-table > tr > td:last-child,
-            #flowers-table > tr > td:last-child,
-            #competitions-table > tr > td:last-child {
-                border-bottom: none;
-            }
-            /* 用 data-label 產生左側欄位名 */
-            #members-table > tr > td::before,
-            #flowers-table > tr > td::before,
-            #competitions-table > tr > td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                color: #6b7280;
-                font-size: 13px;
-                flex-shrink: 0;
-                text-align: left;
-            }
-            /* 操作按鈕：靠右、加大可點區域 */
-            #members-table .actions,
-            #flowers-table .actions,
-            #competitions-table .actions {
-                justify-content: flex-end;
-                gap: 16px;
-            }
-            #members-table .actions button,
-            #flowers-table .actions button,
-            #competitions-table .actions button,
-            #members-table .actions span,
-            #flowers-table .actions span,
-            #competitions-table .actions span {
-                font-size: 20px;
-                padding: 6px;
-            }
-            /* 表單列在手機上不套用卡片 grid，維持原本 colspan 撐滿 */
-            #members-table > tr.form-row > td,
-            #competitions-table > tr.form-row > td {
-                display: block;
-                text-align: left;
-                border-bottom: none;
-            }
-            #members-table > tr.form-row > td::before,
-            #competitions-table > tr.form-row > td::before {
-                content: none;
-            }
-            #members-table > tr.form-row,
-            #competitions-table > tr.form-row {
-                padding: 0;
-            }
-            /* 競賽「沒有符合條件」整列置中，不顯示 data-label */
-            #competitions-table > tr > td[colspan]::before { content: none; }
-            #competitions-table > tr > td[colspan] { justify-content: center; text-align: center; }
+
             .form-grid { grid-template-columns: 1fr; }
         }
 
@@ -987,6 +910,7 @@
                             ➕ 新增成員
                         </button>
                     </div>
+                    <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
@@ -999,6 +923,7 @@
                         </thead>
                         <tbody id="members-table"></tbody>
                     </table>
+                    </div>
                 </div> <div id="flowers-content" class="content">
                     <div class="search-bar">
                         <div class="search-wrapper">
@@ -1012,6 +937,7 @@
                         </button>
                     </div>
                     <div id="flower-form-box" class="flower-form-box hidden"></div>
+                    <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
@@ -1032,6 +958,7 @@
                         </thead>
                         <tbody id="flowers-table"></tbody>
                     </table>
+                    </div>
                 </div>
 
 
@@ -1069,6 +996,7 @@
                         </div>
                     </div>
 
+                    <div class="table-scroll">
                     <table>
                         <thead>
                             <tr>
@@ -1079,6 +1007,7 @@
                         </thead>
                         <tbody id="competitions-table"></tbody>
                     </table>
+                    </div>
                 </div>
 
                 <div id="universal-modal" class="modal" onclick="closeModal(event)">
@@ -2153,6 +2082,12 @@ function renderFlowers() {
         const owners = members.filter(m => m.ownedFlowers && m.ownedFlowers.includes(flower.name)).map(m => m.gameName);
         const gradeClass = 'grade-' + getGradeColorClass(flower.grade);
 
+        // ✨ 誰擁有改成標籤＋數量：👤 N（0 顯示「無」），點擊開啟花朵詳情卡（含擁有者名單）
+        const ownerCount = owners.length;
+        const ownerHtml = ownerCount > 0
+            ? `<span class="owned-count" onclick="showFlowerDetail(${flower.id})">👤 ${ownerCount}</span>`
+            : `<span class="owned-count is-empty" onclick="showFlowerDetail(${flower.id})">無</span>`;
+
         // ✨ 中間 👥 是批量派發；花朵全部僅管理員可操作
         const actionButtons = isAdmin() ? `
             <button class="edit-btn" onclick="editFlower(${flower.id})" title="編輯花朵">✏️</button>
@@ -2164,7 +2099,7 @@ function renderFlowers() {
         row.innerHTML = `
             <td data-label="花朵名稱"><span class="clickable-link" onclick="showFlowerDetail(${flower.id})">${flower.name}</span></td>
 
-            <td data-label="誰擁有" style="font-size: 13px;">${owners.length > 0 ? owners.join(', ') : '無'}</td>
+            <td data-label="誰擁有">${ownerHtml}</td>
 
             <td data-label="等級"><span class="${gradeClass}">${flower.grade}</span></td>
             <td data-label="競賽分數">${flower.competitionScore}</td>
@@ -2333,10 +2268,8 @@ function renderFlowers() {
                                     <div class="detail-row"><span class="detail-label">花瓶</span><span class="detail-value">${flower.vase || '-'}</span></div>
                                     <div class="detail-row"><span class="detail-label">備註</span><span class="detail-value">${flower.note || '-'}</span></div>
 
-                                    <div class="section-title">擁有者名單</div>
-                                    <div class="detail-value" style="text-align: left; line-height: 1.6; max-width: 100%;">
-                                        ${owners.length > 0 ? owners.join(' , ') : '目前無人擁有'}
-                                    </div>
+                                    <div class="section-title">擁有者名單 (${owners.length})</div>
+                                    <div class="tags-container">${generateOwnerTags(owners)}</div>
                                 `;
                         openModal(html);
                     }
@@ -2397,6 +2330,28 @@ function renderFlowers() {
                             const color = fInfo ? getGradeColorCode(fInfo.grade) : '#374151';
                             return `<span class="flower-tag" style="color:${color}; border-color:${color}30; background:${color}08;">${fName}</span>`;
                         }).join('');
+                    }
+
+                    // ✨ 擁有者名單標籤（用於花朵 popup），依中文排序
+                    function generateOwnerTags(ownerList) {
+                        if (!ownerList || ownerList.length === 0) return '<span style="color:#999; font-size:13px;">目前無人擁有</span>';
+                        return ownerList.slice()
+                            .sort((a, b) => a.localeCompare(b, 'zh-Hant'))
+                            .map(name => `<span class="flower-tag" style="color:#1d4ed8; border-color:#bfdbfe; background:#eff6ff;">${name}</span>`)
+                            .join('');
+                    }
+
+                    // ✨ 將「擁有的花朵」依花朵清單的競賽分數由高到低排序，同分用中文排序
+                    function sortOwnedByScore(flowerNames) {
+                        if (!Array.isArray(flowerNames)) return [];
+                        return flowerNames.slice().sort((a, b) => {
+                            const fa = flowers.find(f => f.name === a);
+                            const fb = flowers.find(f => f.name === b);
+                            const sa = fa ? (parseInt(fa.competitionScore) || 0) : 0;
+                            const sb = fb ? (parseInt(fb.competitionScore) || 0) : 0;
+                            if (sb !== sa) return sb - sa;          // 競賽分數：高 → 低
+                            return a.localeCompare(b, 'zh-Hant');   // 同分：中文排序
+                        });
                     }
 
                     function getGradeColorCode(grade) {
@@ -2481,7 +2436,9 @@ function renderFlowers() {
                         const member = members.find(m => m.id === id);
                         if (!member) return;
 
-                        const flowerTags = generateFlowerTags(member.ownedFlowers);
+                        // ✨ 依花朵清單競賽分數由高到低排序（同分用中文）後再產生標籤
+                        const sortedOwned = sortOwnedByScore(member.ownedFlowers);
+                        const flowerTags = generateFlowerTags(sortedOwned);
 
                         const html = `
                                     <div class="modal-header">
