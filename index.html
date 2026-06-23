@@ -1,0 +1,2779 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>花非花</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .login-area {
+            position: relative;
+        }
+
+        .login-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+            .login-btn:hover {
+                background-color: #1d4ed8;
+            }
+
+        .logout-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+            .logout-area span {
+                font-size: 14px;
+                color: #4b5563;
+            }
+
+        .logout-btn {
+            background-color: #dc2626;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+            .logout-btn:hover {
+                background-color: #b91c1c;
+            }
+
+        .login-form {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            background-color: white;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            width: 256px;
+            z-index: 100;
+        }
+
+            .login-form input {
+                width: 100%;
+                border: 1px solid #d1d5db;
+                padding: 6px 8px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                font-size: 14px;
+            }
+
+        .login-form-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+            .login-form-buttons button {
+                flex: 1;
+                padding: 6px 8px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 14px;
+                color: white;
+            }
+
+        .submit-btn {
+            background-color: #2563eb;
+        }
+
+            .submit-btn:hover {
+                background-color: #1d4ed8;
+            }
+
+        .cancel-btn {
+            background-color: #6b7280;
+        }
+
+            .cancel-btn:hover {
+                background-color: #4b5563;
+            }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #4b5563;
+            border-bottom: 2px solid transparent;
+        }
+
+            .tab:hover {
+                color: #111827;
+            }
+
+            .tab.active {
+                color: #2563eb;
+                border-bottom-color: #2563eb;
+            }
+
+        .search-bar {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 8px 12px;
+            padding-left: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+        }
+
+        .add-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+            .add-btn:hover {
+                background-color: #1d4ed8;
+            }
+
+        .content {
+            display: none;
+        }
+
+            .content.active {
+                display: block;
+            }
+
+        table {
+            width: 100%;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f3f4f6;
+            border-bottom: 1px solid #d1d5db;
+        }
+
+        /* 1. 設定所有表格的「標題列」 (包含成員、花朵、競賽) */
+        th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 500;
+            color: #111827;
+            /* ✨ 關鍵：這一行會讓三個分頁的標題通通不換行 ✨ */
+            white-space: nowrap;
+        }
+
+        /* 2. 設定所有表格的「內容列」 (高度 30px + 不換行) */
+        #members-table td,
+        #flowers-table td,
+        #competitions-table td {
+            height: 30px; /* 強制高度 30px */
+            padding: 0 8px; /* 縮減內距 */
+            line-height: 30px; /* 垂直置中 */
+            /* ✨ 關鍵：讓內容太長時變成 "..." 而不是換行撐高 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #111827;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .sub-row {
+            background-color: #f9fafb !important;
+        }
+
+            .sub-row td {
+                padding: 8px 16px;
+                font-size: 14px;
+                color: #4b5563;
+            }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .edit-btn, .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .edit-btn {
+            color: #2563eb;
+        }
+
+            .edit-btn:hover {
+                color: #1d4ed8;
+            }
+
+        .delete-btn {
+            color: #dc2626;
+        }
+
+            .delete-btn:hover {
+                color: #b91c1c;
+            }
+
+        .form-row {
+            background-color: #f9fafb;
+        }
+
+        .form-container {
+            padding: 16px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .form-container input,
+        .form-container select,
+        .form-container textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+            .form-container input:disabled,
+            .form-container select:disabled,
+            .form-container textarea:disabled {
+                background-color: #f3f4f6;
+                cursor: not-allowed;
+            }
+
+        .form-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+            .form-buttons button {
+                flex: 1;
+                padding: 8px 16px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                color: white;
+                font-size: 14px;
+            }
+
+        .save-btn {
+            background-color: #16a34a;
+        }
+
+            .save-btn:hover {
+                background-color: #15803d;
+            }
+
+            .save-btn:disabled {
+                background-color: #9ca3af;
+                cursor: not-allowed;
+            }
+
+        .form-cancel-btn {
+            background-color: #6b7280;
+        }
+
+            .form-cancel-btn:hover {
+                background-color: #4b5563;
+            }
+
+        .flower-form-box {
+            background-color: white;
+            border: 1px solid #d1d5db;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .grade-red {
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .grade-orange {
+            color: #f97316;
+            font-weight: bold;
+        }
+
+        .grade-purple {
+            color: #a855f7;
+            font-weight: bold;
+        }
+
+        .grade-blue {
+            color: #3b82f6;
+            font-weight: bold;
+        }
+
+        .grade-green {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .checkbox-list {
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px;
+            cursor: pointer;
+        }
+
+            .checkbox-item:hover {
+                background-color: #f3f4f6;
+            }
+
+        .hidden {
+            display: none !important;
+        }
+        /* ✨ 統一設定所有表格 (成員、花朵、競賽) 的高度為 30px ✨ */
+        #members-table td,
+        #flowers-table td,
+        #competitions-table td {
+            height: 30px; /* 強制高度 30px */
+            padding: 0 8px; /* 上下內距歸零 */
+            line-height: 30px; /* 讓文字垂直置中 */
+            /* 防止內容太長撐開高度 (字太多會變 ...) */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px; /* 設定最大寬度，避免表格被長文字撐壞 */
+        }
+
+        /* 微調所有表格的操作按鈕，讓它塞得進 30px 的格子 */
+        #members-table .actions,
+        #flowers-table .actions,
+        #competitions-table .actions {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            align-items: center; /* 按鈕垂直置中 */
+            justify-content: center;
+        }
+
+        /* 讓「等級」欄位 (花朵清單) 的標籤字體稍微縮小，才不會切到 */
+        .grade-red, .grade-orange, .grade-purple, .grade-blue, .grade-green {
+            font-size: 13px;
+        }
+
+        /* ✨ 通用詳細資料卡片 (Modal) ✨ */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s; /* 淡入淡出效果 */
+        }
+
+            .modal.show {
+                opacity: 1;
+                visibility: visible;
+            }
+
+        .modal-content {
+            background-color: white;
+            width: 90%;
+            max-width: 400px;
+            max-height: 85vh;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            overflow-y: auto;
+            position: relative;
+            transform: scale(0.95);
+            transition: transform 0.2s; /* 縮放動畫 */
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        /* 卡片內容排版 */
+        .modal-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .modal-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            border-bottom: 1px dashed #f3f4f6;
+            padding-bottom: 8px;
+        }
+
+        .detail-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .detail-value {
+            font-size: 15px;
+            color: #111827;
+            font-weight: 500;
+            text-align: right;
+            max-width: 70%;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #9ca3af;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* 彩色花朵標籤 */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .flower-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+        }
+
+        /* 關閉按鈕 */
+        .modal-close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #f3f4f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 20px;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .modal-close-btn:hover {
+                background: #e5e7eb;
+                color: #111827;
+            }
+
+        /* 讓表格裡的字變藍色可點擊 */
+        .clickable-link {
+            color: #2563eb;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            position: relative;
+        }
+
+            .clickable-link:hover {
+                text-decoration: underline;
+                color: #1d4ed8;
+            }
+
+        /* ✨ 救援表單：讓新增/編輯表單的欄位自動長高，不要被鎖死在 30px ✨ */
+        tr.form-row td {
+            height: auto !important; /* 解除高度限制 */
+            white-space: normal !important; /* 允許內容換行 */
+            overflow: visible !important; /* 允許內容超出 */
+            max-width: none !important; /* 解除寬度限制 */
+            padding: 16px !important; /* 給表單舒服的內距 */
+        }
+
+        /* ✨ 救援 Checkbox：防止它被撐大，讓文字顯示出來 ✨ */
+        .form-container input[type="checkbox"] {
+            width: auto !important; /* 寬度回復正常 (不要100%) */
+            height: auto !important; /* 高度回復正常 */
+            margin-right: 8px !important; /* 與文字保持距離 */
+            padding: 0 !important; /* 移除多餘內距 */
+            border: none !important; /* 移除邊框 */
+            display: inline-block; /* 確保並排顯示 */
+            flex-shrink: 0; /* 防止被壓縮 */
+        }
+
+        /* 確保手機版標籤文字不會被切掉 */
+        .checkbox-item {
+            align-items: center !important;
+            overflow: visible !important; /* 允許文字凸出來 (如果太長) */
+        }
+
+        /* ✨ 公會管理區樣式 ✨ */
+        .guild-manager-box {
+            background-color: #f0f9ff; /* 淺藍色背景 */
+            border: 1px solid #bae6fd;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .guild-manager-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0369a1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .guild-input-group {
+            display: flex;
+            gap: 8px;
+            max-width: 400px;
+        }
+
+        /* 公會標籤 (可刪除) */
+        .guild-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #334155;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+
+        .guild-delete-btn {
+            margin-left: 8px;
+            color: #ef4444;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+            .guild-delete-btn:hover {
+                background-color: #fee2e2;
+            }
+
+        /* ✨ 全頁 loading 遮罩 */
+        .loading-overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.55);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .loading-overlay.show { display: flex; }
+        .loading-box {
+            background: #fff; border: 1px solid #d1d5db; border-radius: 10px;
+            padding: 16px 26px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 12px; font-size: 15px; color: #374151;
+        }
+        .loading-spinner {
+            width: 22px; height: 22px; border: 3px solid #e5e7eb; border-top-color: #2563eb;
+            border-radius: 50%; animation: hua-spin 0.8s linear infinite;
+        }
+        @keyframes hua-spin { to { transform: rotate(360deg); } }
+
+        /* ✨ 自訂對話框（取代原生 alert / confirm） */
+        .app-dialog-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+            display: none; align-items: center; justify-content: center; z-index: 3000;
+        }
+        .app-dialog-overlay.show { display: flex; }
+        .app-dialog-box {
+            background: #fff; border-radius: 12px; padding: 22px 24px; width: 360px; max-width: 90%;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+        }
+        .app-dialog-msg { font-size: 15px; color: #111827; line-height: 1.6; white-space: pre-wrap; margin-bottom: 18px; }
+        .app-dialog-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        .dialog-btn { padding: 8px 18px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        .dialog-ok { background: #2563eb; color: #fff; }
+        .dialog-ok:hover { background: #1d4ed8; }
+        .dialog-cancel { background: #e5e7eb; color: #374151; }
+        .dialog-cancel:hover { background: #d1d5db; }
+
+        /* ✨ 頂部摘要列 */
+        .summary-bar {
+            margin: -8px 0 20px 0;
+            font-size: 15px;
+            color: #4b5563;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            align-items: center;
+        }
+        .summary-bar .summary-item { white-space: nowrap; }
+
+        /* ✨ 擁有花數量標籤 (成員表格用) */
+        .owned-count {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 15px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1d4ed8;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .owned-count:hover { background: #dbeafe; }
+        .owned-count.is-empty {
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+            color: #9ca3af;
+            cursor: pointer;
+        }
+
+        /* ✨ 選花清單：等級快速篩選列 + 只看已勾選開關 */
+        .flower-filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .grade-filter-btn {
+            padding: 4px 12px;
+            font-size: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 14px;
+            background: #fff;
+            color: #374151;
+            cursor: pointer;
+        }
+        .grade-filter-btn:hover { background: #f3f4f6; }
+        .grade-filter-btn.active {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+        .checked-only-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #374151;
+            cursor: pointer;
+            margin-left: auto;
+            white-space: nowrap;
+        }
+        .checked-only-toggle input { width: auto !important; }
+
+        /* ✨ 1. 手機版 RWD：三個資料表格改成卡片式 (max-width: 768px) */
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            h1 { font-size: 26px; }
+            .header { margin-bottom: 16px; }
+            .tabs { overflow-x: auto; }
+            .tab { padding: 10px 14px; font-size: 15px; white-space: nowrap; }
+
+            /* 讓三個表格脫離 table 排版，改成卡片堆疊 */
+            #members-content table,
+            #flowers-content table,
+            #competitions-content table {
+                border: none;
+                background: transparent;
+            }
+            #members-content thead,
+            #flowers-content thead,
+            #competitions-content thead {
+                display: none; /* 隱藏表頭列 */
+            }
+            #members-table,
+            #flowers-table,
+            #competitions-table {
+                display: block;
+            }
+            /* 每一列 => 一張卡片 */
+            #members-table > tr,
+            #flowers-table > tr,
+            #competitions-table > tr {
+                display: block;
+                background: #fff;
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+                padding: 10px 14px;
+                margin-bottom: 12px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            }
+            #members-table > tr:hover,
+            #flowers-table > tr:hover,
+            #competitions-table > tr:hover {
+                background: #fff; /* 手機卡片不需 hover 變色 */
+            }
+            /* 每一格 => 一行「欄位名：值」 */
+            #members-table > tr > td,
+            #flowers-table > tr > td,
+            #competitions-table > tr > td {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 12px;
+                height: auto !important;
+                line-height: 1.5 !important;
+                max-width: none !important;
+                white-space: normal !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                padding: 6px 0 !important;
+                border-bottom: 1px dashed #f0f0f0;
+                text-align: right;
+            }
+            #members-table > tr > td:last-child,
+            #flowers-table > tr > td:last-child,
+            #competitions-table > tr > td:last-child {
+                border-bottom: none;
+            }
+            /* 用 data-label 產生左側欄位名 */
+            #members-table > tr > td::before,
+            #flowers-table > tr > td::before,
+            #competitions-table > tr > td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: #6b7280;
+                font-size: 13px;
+                flex-shrink: 0;
+                text-align: left;
+            }
+            /* 操作按鈕：靠右、加大可點區域 */
+            #members-table .actions,
+            #flowers-table .actions,
+            #competitions-table .actions {
+                justify-content: flex-end;
+                gap: 16px;
+            }
+            #members-table .actions button,
+            #flowers-table .actions button,
+            #competitions-table .actions button,
+            #members-table .actions span,
+            #flowers-table .actions span,
+            #competitions-table .actions span {
+                font-size: 20px;
+                padding: 6px;
+            }
+            /* 表單列在手機上不套用卡片 grid，維持原本 colspan 撐滿 */
+            #members-table > tr.form-row > td,
+            #competitions-table > tr.form-row > td {
+                display: block;
+                text-align: left;
+                border-bottom: none;
+            }
+            #members-table > tr.form-row > td::before,
+            #competitions-table > tr.form-row > td::before {
+                content: none;
+            }
+            #members-table > tr.form-row,
+            #competitions-table > tr.form-row {
+                padding: 0;
+            }
+            /* 競賽「沒有符合條件」整列置中，不顯示 data-label */
+            #competitions-table > tr > td[colspan]::before { content: none; }
+            #competitions-table > tr > td[colspan] { justify-content: center; text-align: center; }
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題和登入區 -->
+        <div class="header">
+            <h1>花非花</h1>
+            <div class="login-area">
+                <div id="loginButton">
+                    <button class="login-btn" onclick="showLoginForm()">登入 / 註冊</button>
+                </div>
+                <div id="loginFormBox" class="login-form hidden">
+                    <!-- 登入表單 -->
+                    <form id="loginForm" onsubmit="handleLogin(event)">
+                        <input type="text" id="login-username" placeholder="帳號" required autocomplete="username">
+                        <input type="password" id="login-password" placeholder="密碼" required autocomplete="current-password">
+                        <div class="login-form-buttons">
+                            <button type="submit" class="submit-btn">登入</button>
+                            <button type="button" class="cancel-btn" onclick="hideLoginForm()">取消</button>
+                        </div>
+                        <div style="text-align:center; margin-top:8px; font-size:13px;">
+                            還沒有帳號？<a href="#" onclick="switchAuthMode('register'); return false;" style="color:#2563eb;">註冊</a>
+                        </div>
+                    </form>
+                    <!-- 註冊表單 -->
+                    <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+                        <input type="text" id="reg-username" placeholder="帳號" required autocomplete="username">
+                        <input type="password" id="reg-password" placeholder="密碼" required autocomplete="new-password">
+                        <input type="text" id="reg-code" placeholder="註冊碼" required>
+                        <div class="login-form-buttons">
+                            <button type="submit" class="submit-btn">註冊並登入</button>
+                            <button type="button" class="cancel-btn" onclick="hideLoginForm()">取消</button>
+                        </div>
+                        <div style="text-align:center; margin-top:8px; font-size:13px;">
+                            已經有帳號？<a href="#" onclick="switchAuthMode('login'); return false;" style="color:#2563eb;">登入</a>
+                        </div>
+                    </form>
+                </div>
+                <div id="logoutArea" class="logout-area hidden">
+                    <span id="currentUserLabel"></span>
+                    <button class="logout-btn" onclick="handleLogout()">登出</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- 分頁 -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('members')">成員清單</button>
+            <button class="tab" onclick="switchTab('flowers')">花朵清單</button>
+            <button class="tab" onclick="switchTab('competitions')">本週競賽</button>
+        </div>
+
+        <!-- ✨ 頂部摘要列 -->
+        <div id="summary-bar" class="summary-bar"></div>
+
+        <div id="members-content" class="content active">
+
+                <div id="guild-manager-area" class="guild-manager-box hidden">
+                    <div class="guild-manager-title">🏢 公會管理 (僅管理員可見)</div>
+                    <div class="guild-input-group">
+                        <input type="text" id="new-guild-name" placeholder="輸入新公會名稱" style="flex:1;">
+                        <button class="add-btn" onclick="addGuild()">新增</button>
+                    </div>
+                    <div style="font-size: 13px; color: #64748b; margin-top: 4px;">目前已建立的公會 (點擊 X 可刪除)：</div>
+                    <div id="guild-list-display" class="tags-container" style="margin-top: 8px;">
+                    </div>
+                </div>
+                <div class="search-bar">
+                    <div class="search-bar">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" class="search-input" id="members-search" placeholder="搜尋成員名稱..." onkeyup="searchTable('members')">
+                        </div>
+                    </div>
+                </div>
+                    <div style="margin-bottom: 16px;">
+                        <button class="add-btn" id="add-member-btn" onclick="tryAddMember()">
+                            ➕ 新增成員
+                        </button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>遊戲名稱</th>
+                                <th>遊戲ID</th>
+                                <th>公會</th>
+                                <th class="center">擁有花</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="members-table"></tbody>
+                    </table>
+                </div> <div id="flowers-content" class="content">
+                    <div class="search-bar">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" class="search-input" id="flowers-search" placeholder="搜尋花朵名稱..." onkeyup="searchTable('flowers')">
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <button class="add-btn" id="add-flower-btn" onclick="toggleFlowerForm()">
+                            ➕ <span id="flower-btn-text">新增花朵資料</span>
+                        </button>
+                    </div>
+                    <div id="flower-form-box" class="flower-form-box hidden"></div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>花朵名稱</th>
+                                <th>誰擁有</th>
+                                <th onclick="sortFlowersByGrade()" style="cursor: pointer; user-select: none;">
+                                    等級 <span id="grade-sort-icon">↕</span>
+                                </th>
+                                <th onclick="sortFlowersByScore()" style="cursor: pointer; user-select: none;">
+                                    競賽分數 <span id="score-sort-icon">↕</span>
+                                </th>
+                                <th>上市日期</th>
+                                <th>花瓶</th>
+                                <th>備註</th>
+                                <th>來源</th>
+                                <th class="center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="flowers-table"></tbody>
+                    </table>
+                </div>
+
+
+                <div id="competitions-content" class="content">
+
+                    <div class="search-bar">
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" class="search-input" id="competitions-flower-search"
+                                   placeholder="搜尋參賽花朵 (任意文字)..." onkeyup="renderCompetitions()">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <button class="add-btn" id="add-competition-btn" onclick="tryAddCompetition()">
+                            ➕ 新增競賽記錄
+                        </button>
+                    </div>
+
+                    <div class="search-bar">
+                        <select id="comp-guild-filter" onchange="renderCompetitions()" style="
+                    padding: 8px;
+                    border: 1px solid #d1d5db;
+                    border-radius: 8px;
+                    margin-right: 12px;
+                    cursor: pointer;
+                ">
+                            <option value="">全部公會</option>
+                        </select>
+
+                        <div class="search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" class="search-input" id="competitions-member-search"
+                                   placeholder="搜尋成員名稱 (任意文字)..." onkeyup="renderCompetitions()">
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>成員名稱</th>
+                                <th>選擇的花朵</th>
+                                <th class="center">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="competitions-table"></tbody>
+                    </table>
+                </div>
+
+                <div id="universal-modal" class="modal" onclick="closeModal(event)">
+                    <div class="modal-content" onclick="event.stopPropagation()">
+                        <button class="modal-close-btn" onclick="closeModal()">×</button>
+                        <div id="modal-body-content">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✨ 全頁 loading 遮罩 -->
+                <div id="loading-overlay" class="loading-overlay">
+                    <div class="loading-box">
+                        <div class="loading-spinner"></div>
+                        <span id="loading-text">處理中...</span>
+                    </div>
+                </div>
+
+                <!-- ✨ 自訂對話框（通知／確認） -->
+                <div id="app-dialog" class="app-dialog-overlay">
+                    <div class="app-dialog-box">
+                        <div id="app-dialog-msg" class="app-dialog-msg"></div>
+                        <div id="app-dialog-buttons" class="app-dialog-buttons"></div>
+                    </div>
+                </div>
+
+                <script>
+                    // 全域變數
+                    const API_URL = 'https://script.google.com/macros/s/AKfycbzVGoaNJIjF9V7t8mVwbpljLUPDyhKan9GuGGzZ4tcfdTrt-sZuZRCVrPrQ68NaRa-uUw/exec';
+
+                    // ✨ 會員制：authToken + currentUser，從 localStorage 還原
+                    let authToken = localStorage.getItem('hua_token') || '';
+                    let currentUser = null;
+                    try {
+                        const savedUser = localStorage.getItem('hua_user');
+                        if (savedUser) currentUser = JSON.parse(savedUser);
+                    } catch (e) { currentUser = null; }
+
+                    // 輔助函式：登入狀態 / 管理員判斷
+                    function isAuthed() { return !!authToken && !!currentUser; }
+                    function isAdmin() { return isAuthed() && currentUser.role === 'admin'; }
+                    // 判斷某筆 members/competitions 是否屬於目前使用者（admin 視為全部可動）
+                    function canEditOwned(ownerId) {
+                        if (isAdmin()) return true;
+                        if (!isAuthed()) return false;
+                        return String(ownerId) === String(currentUser.username);
+                    }
+
+                    let currentTab = 'members';
+                    let members = [];
+                    let flowers = [];
+                    let competitions = [];
+
+                    let guilds = []; // 變成空陣列，等待從雲端讀取
+                    const flowerSources = ['活動', '當週禮包花', '花之密令', '花靈', '花圃禮包', '時光商店', '花靈商店', '花坊', 'VIP商店', '等級花'];
+                    const flowerGrades = [
+                        { value: '紅(仙品)', label: '紅(仙品)', color: 'red' },
+                        { value: '橙(華品)', label: '橙(華品)', color: 'orange' },
+                        { value: '紫(珍品)', label: '紫(珍品)', color: 'purple' },
+                        { value: '藍(普品)', label: '藍(普品)', color: 'blue' },
+                        { value: '綠(凡品)', label: '綠(凡品)', color: 'green' }
+                    ];
+
+                    // 初始化
+                    function init() {
+                        renderAuthUI(); // 先依 localStorage 還原的登入狀態更新頂部 UI
+                        loadData();
+                    }
+
+                    async function loadData() {
+                        showLoading('載入資料中...');
+                        try {
+                            document.body.style.cursor = 'wait';
+
+                            // 1. 取得資料
+                            const response = await fetch(API_URL + '?action=getData');
+                            const text = await response.text();
+
+                            // 2. 清除隱形空白並轉成資料
+                            let data;
+                            try {
+                                data = JSON.parse(text.trim());
+                            } catch (e) {
+                                console.error('JSON 解析失敗', e);
+                                throw new Error('資料格式錯誤，請檢查 Google Sheet');
+                            }
+
+                            // 3. 更新變數
+                            members = data.members || [];
+                            flowers = data.flowers || [];
+                            competitions = data.competitions || [];
+                            // ✨ guilds 容錯：雲端有時把公會存成物件 {"公會名":""} 或字串，
+                            // 這裡統一正規化成字串陣列，否則 renderGuildManager() 的 guilds.forEach
+                            // 會因為拿到物件而報「guilds.forEach is not a function」。
+                            const rawGuilds = data.guilds;
+                            if (Array.isArray(rawGuilds)) {
+                                guilds = rawGuilds;
+                            } else if (rawGuilds && typeof rawGuilds === 'object') {
+                                guilds = Object.keys(rawGuilds);
+                            } else {
+                                guilds = [];
+                            }
+
+                            // 資料修復機制 (保持原本的邏輯)
+                            members.forEach(m => {
+                                if (!Array.isArray(m.ownedFlowers)) {
+                                    if (typeof m.ownedFlowers === 'string') {
+                                        if (m.ownedFlowers.trim().startsWith('[')) {
+                                            try { m.ownedFlowers = JSON.parse(m.ownedFlowers); } catch (e) { m.ownedFlowers = []; }
+                                        } else if (m.ownedFlowers.trim() !== '') {
+                                            m.ownedFlowers = m.ownedFlowers.split(',').map(s => s.trim());
+                                        } else { m.ownedFlowers = []; }
+                                    } else { m.ownedFlowers = []; }
+                                }
+                            });
+
+                            competitions.forEach(c => {
+                                if (!Array.isArray(c.selectedFlowers)) {
+                                    if (typeof c.selectedFlowers === 'string' && c.selectedFlowers.trim().startsWith('[')) {
+                                        try { c.selectedFlowers = JSON.parse(c.selectedFlowers); } catch (e) { c.selectedFlowers = []; }
+                                    } else { c.selectedFlowers = []; }
+                                }
+                            });
+
+                            // 4. 渲染畫面
+                            renderAuthUI();       // ✨ 依登入狀態更新頂部登入/登出區
+                            renderMembers();
+                            renderFlowers();
+                            renderCompetitions();
+                            renderGuildManager(); // ✨ 加入這行：渲染公會管理區
+                            // ✨ 請確保這裡有這一行：
+                            initCompGuildFilter();
+
+                            document.body.style.cursor = 'default';
+                            console.log('雲端資料載入並修復成功！');
+
+                        } catch (error) {
+                            console.error('載入失敗:', error);
+                            notify('讀取失敗，錯誤訊息：' + error.message);
+                            document.body.style.cursor = 'default';
+                        } finally {
+                            hideLoading();
+                        }
+                    }
+
+                    // 請放在 loadData() 成功載入資料之後，或是放在 renderCompetitions() 附近
+                    // 初始化或更新競賽頁面的公會篩選器
+                    function initCompGuildFilter() {
+                        const filterSelect = document.getElementById('comp-guild-filter');
+
+                        // ✨ 判斷：如果沒有公會資料，就直接隱藏這個下拉選單
+                        if (guilds.length === 0) {
+                            filterSelect.style.display = 'none';
+                            filterSelect.innerHTML = '<option value="">全部公會</option>'; // 保持結構但不顯示
+                            return;
+                        }
+
+                        // 如果有公會，就顯示並填入選項
+                        filterSelect.style.display = ''; // 恢復顯示
+                        filterSelect.innerHTML = '<option value="">全部公會</option>';
+
+                        guilds.forEach(g => {
+                            const option = document.createElement('option');
+                            option.value = g;
+                            option.textContent = g;
+                            filterSelect.appendChild(option);
+                        });
+                    }
+
+                    // ✨ 全頁 loading 遮罩控制（用計數器，支援連續多次呼叫不閃爍）
+                    let _loadingCount = 0;
+                    function showLoading(msg) {
+                        _loadingCount++;
+                        const t = document.getElementById('loading-text');
+                        if (t) t.textContent = msg || '處理中...';
+                        const o = document.getElementById('loading-overlay');
+                        if (o) o.classList.add('show');
+                    }
+                    function hideLoading() {
+                        _loadingCount = Math.max(0, _loadingCount - 1);
+                        if (_loadingCount === 0) {
+                            const o = document.getElementById('loading-overlay');
+                            if (o) o.classList.remove('show');
+                        }
+                    }
+
+                    // ✨ 自訂對話框：notify(通知) 與 showConfirm(確認，回 Promise<boolean>)，取代原生 alert/confirm
+                    function _openDialog(message, buttons) {
+                        return new Promise(function (resolve) {
+                            const overlay = document.getElementById('app-dialog');
+                            const msg = document.getElementById('app-dialog-msg');
+                            const btns = document.getElementById('app-dialog-buttons');
+                            msg.textContent = message;
+                            btns.innerHTML = '';
+                            buttons.forEach(function (b) {
+                                const el = document.createElement('button');
+                                el.textContent = b.text;
+                                el.className = b.cls;
+                                el.onclick = function () { overlay.classList.remove('show'); resolve(b.val); };
+                                btns.appendChild(el);
+                            });
+                            overlay.classList.add('show');
+                        });
+                    }
+                    function notify(message) {
+                        return _openDialog(message, [{ text: '確定', cls: 'dialog-btn dialog-ok', val: true }]);
+                    }
+                    function showConfirm(message) {
+                        return _openDialog(message, [{ text: '取消', cls: 'dialog-btn dialog-cancel', val: false }, { text: '確認', cls: 'dialog-btn dialog-ok', val: true }]);
+                    }
+
+                    // ✨ 共用 API：自動帶入 authToken，POST 回 JSON
+                    // 不設 Content-Type（用瀏覽器預設 text/plain）以避免 CORS preflight。
+                    async function apiPost(payload) {
+                        const _msgMap = { login: '登入中...', register: '註冊中...', addItem: '儲存中...', updateItem: '儲存中...', deleteItem: '刪除中...' };
+                        showLoading(_msgMap[payload && payload.action] || '處理中...');
+                        try {
+                            const body = Object.assign({}, payload);
+                            if (authToken) body.token = authToken;
+                            const res = await fetch(API_URL, {
+                                method: 'POST',
+                                body: JSON.stringify(body)
+                            });
+                            const text = await res.text();
+                            try {
+                                return JSON.parse(text.trim());
+                            } catch (e) {
+                                throw new Error('伺服器回應格式錯誤：' + text);
+                            }
+                        } finally {
+                            hideLoading();
+                        }
+                    }
+
+                    // ==========================================
+                    // 登入 / 註冊 / 登出（會員制）
+                    // ==========================================
+
+                    // 依登入狀態更新頂部 UI 與公會管理區，並重繪所有清單
+                    function renderAuthUI() {
+                        const loginButton = document.getElementById('loginButton');
+                        const logoutArea = document.getElementById('logoutArea');
+                        const guildArea = document.getElementById('guild-manager-area');
+                        const userLabel = document.getElementById('currentUserLabel');
+
+                        if (isAuthed()) {
+                            loginButton.classList.add('hidden');
+                            logoutArea.classList.remove('hidden');
+                            const roleText = currentUser.role === 'admin' ? '管理員' : '會員';
+                            if (userLabel) userLabel.textContent = `你好，${currentUser.username}（${roleText}）`;
+                        } else {
+                            loginButton.classList.remove('hidden');
+                            logoutArea.classList.add('hidden');
+                            if (userLabel) userLabel.textContent = '';
+                        }
+
+                        // 公會管理區僅管理員可見
+                        if (guildArea) {
+                            if (isAdmin()) guildArea.classList.remove('hidden');
+                            else guildArea.classList.add('hidden');
+                        }
+                    }
+
+                    // ✨ 頂部摘要列：成員數 / 花朵數 / 本週競賽數
+                    function renderSummary() {
+                        const bar = document.getElementById('summary-bar');
+                        if (!bar) return;
+                        const x = members.length;
+                        const y = flowers.length;
+                        const z = competitions.length;
+                        bar.innerHTML =
+                            `<span class="summary-item">👥 ${x} 位成員</span>` +
+                            `<span class="summary-item">·</span>` +
+                            `<span class="summary-item">🌸 ${y} 種花</span>` +
+                            `<span class="summary-item">·</span>` +
+                            `<span class="summary-item">🏆 本週 ${z} 筆競賽</span>`;
+                    }
+
+                    function showLoginForm() {
+                        switchAuthMode('login');
+                        document.getElementById('loginFormBox').classList.remove('hidden');
+                    }
+
+                    function hideLoginForm() {
+                        document.getElementById('loginFormBox').classList.add('hidden');
+                        // 清空所有欄位
+                        ['login-username', 'login-password', 'reg-username', 'reg-password', 'reg-code'].forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) el.value = '';
+                        });
+                    }
+
+                    // 在登入 / 註冊兩個表單之間切換
+                    function switchAuthMode(mode) {
+                        const loginForm = document.getElementById('loginForm');
+                        const registerForm = document.getElementById('registerForm');
+                        if (mode === 'register') {
+                            loginForm.classList.add('hidden');
+                            registerForm.classList.remove('hidden');
+                        } else {
+                            registerForm.classList.add('hidden');
+                            loginForm.classList.remove('hidden');
+                        }
+                    }
+
+                    // 成功登入 / 註冊後：保存 token+user，更新 UI 並重繪
+                    function applyAuthSuccess(result) {
+                        authToken = result.token;
+                        currentUser = { username: result.username, role: result.role };
+                        localStorage.setItem('hua_token', authToken);
+                        localStorage.setItem('hua_user', JSON.stringify(currentUser));
+                        hideLoginForm();
+                        renderAuthUI();
+                        renderMembers();
+                        renderFlowers();
+                        renderCompetitions();
+                        renderGuildManager();
+                    }
+
+                    async function handleLogin(event) {
+                        event.preventDefault();
+                        const username = document.getElementById('login-username').value.trim();
+                        const password = document.getElementById('login-password').value;
+                        if (!username || !password) return;
+
+                        try {
+                            const result = await apiPost({ action: 'login', username, password });
+                            if (result && result.success) {
+                                applyAuthSuccess(result);
+                            } else {
+                                notify('登入失敗：' + ((result && result.error) || '帳號或密碼錯誤'));
+                            }
+                        } catch (err) {
+                            notify('登入失敗：' + err.message);
+                        }
+                    }
+
+                    async function handleRegister(event) {
+                        event.preventDefault();
+                        const username = document.getElementById('reg-username').value.trim();
+                        const password = document.getElementById('reg-password').value;
+                        const registerCode = document.getElementById('reg-code').value.trim();
+                        if (!username || !password || !registerCode) return;
+
+                        try {
+                            const result = await apiPost({ action: 'register', username, password, registerCode });
+                            if (result && result.success) {
+                                applyAuthSuccess(result); // 註冊成功即自動登入
+                                notify('註冊成功，已自動登入！');
+                            } else {
+                                notify('註冊失敗：' + ((result && result.error) || '請稍後再試'));
+                            }
+                        } catch (err) {
+                            notify('註冊失敗：' + err.message);
+                        }
+                    }
+
+                    async function handleLogout() {
+                        if (!(await showConfirm('確定要登出嗎？'))) return;
+                        authToken = '';
+                        currentUser = null;
+                        localStorage.removeItem('hua_token');
+                        localStorage.removeItem('hua_user');
+                        renderAuthUI();
+                        // 登出後重新渲染，鎖住按鈕
+                        renderMembers();
+                        renderFlowers();
+                        renderCompetitions();
+                        renderGuildManager();
+                    }
+
+                    // 分頁切換
+                    function switchTab(tab) {
+                        currentTab = tab;
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+
+                        // 這裡原本用 event.target，但為了避免錯誤，改用 querySelector
+                        const activeBtn = Array.from(document.querySelectorAll('.tab')).find(b => b.textContent.includes(
+                            tab === 'members' ? '成員' : tab === 'flowers' ? '花朵' : '競賽'
+                        ));
+                        if (activeBtn) activeBtn.classList.add('active');
+
+                        document.getElementById(tab + '-content').classList.add('active');
+                    }
+
+                    // 搜尋功能
+                    // 搜尋功能 (指定欄位版)
+                    function searchTable(type) {
+                        // 1. 取得輸入文字 (並去除前後空白)
+                        const searchValue = document.getElementById(type + '-search').value.toLowerCase().trim();
+                        const table = document.getElementById(type + '-table');
+                        const rows = table.getElementsByTagName('tr');
+
+                        for (let i = 0; i < rows.length; i++) {
+                            const row = rows[i];
+                            // 跳過表單列和隱藏列
+                            if (row.classList.contains('form-row') || row.classList.contains('sub-row')) continue;
+
+                            let targetText = '';
+
+                            // ✨ 關鍵修改：指定要搜尋哪一格 (index 0 代表第一欄)
+                            if (type === 'members') {
+                                // 成員清單：只搜第一欄 (遊戲名稱)
+                                targetText = row.cells[0] ? row.cells[0].textContent : '';
+                            } else if (type === 'flowers') {
+                                // 花朵清單：只搜第一欄 (花朵名稱)
+                                targetText = row.cells[0] ? row.cells[0].textContent : '';
+                            } else {
+                                // 其他情況 (預防萬一)：搜整行
+                                targetText = row.textContent;
+                            }
+
+                            // 比對文字 (只要包含搜尋字就顯示)
+                            if (targetText.toLowerCase().includes(searchValue)) {
+                                row.style.display = '';
+                            } else {
+                                row.style.display = 'none';
+                            }
+                        }
+                    }
+
+                    function showMemberForm(member = null) {
+                        const isEdit = member !== null;
+                        const tbody = document.getElementById('members-table');
+
+                        // ✨ 每次開啟表單時重設選花篩選狀態（等級回「全部」，搜尋/只看已勾選由表單 HTML 預設）
+                        memberFlowerGradeFilter = '';
+
+                        const existingForm = tbody.querySelector('.form-row');
+                        if (existingForm) existingForm.remove();
+
+                        // 編輯模式下，若非擁有者（且非管理員）則整個表單唯讀
+                        const isLocked = isEdit && !canEditOwned(member.ownerId);
+
+                        // 1. 準備花朵勾選清單 HTML（每個選項加上 data-grade 供等級篩選用）
+                        let flowersHtml = '';
+                        if (flowers.length === 0) {
+                            flowersHtml = '<div style="padding:4px; color:#666; grid-column: 1/-1;">尚未建立花朵資料</div>';
+                        } else {
+                            flowersHtml = flowers.map(f => {
+                                const gradeChar = f.grade ? f.grade.charAt(0) : '';
+                                return `
+            <label class="checkbox-item" data-grade="${gradeChar}" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <input type="checkbox" name="member-flower-select" value="${f.name}"
+                    ${member && member.ownedFlowers && member.ownedFlowers.includes(f.name) ? 'checked' : ''}
+                    ${isLocked ? 'disabled' : ''}>
+                <span style="margin-left:4px; font-size: 13px;">${f.name}</span>
+            </label>
+        `;
+                            }).join('');
+                        }
+
+                        // 2. 準備公會選單 HTML
+                        let guildInputHtml = '';
+                        if (guilds.length > 0) {
+                            guildInputHtml = `
+            <select id="member-guild" required style="grid-column: span 2;" ${isLocked ? 'disabled' : ''}>
+                <option value="">選擇公會*</option>
+                ${guilds.map(g => `<option value="${g}" ${member && member.guild === g ? 'selected' : ''}>${g}</option>`).join('')}
+            </select>
+        `;
+                        } else {
+                            guildInputHtml = `<input type="hidden" id="member-guild" value="${member ? (member.guild || '') : ''}">`;
+                        }
+
+                        // 3. 組合表單 HTML
+                        const formRow = document.createElement('tr');
+                        formRow.className = 'form-row';
+                        formRow.innerHTML = `
+        <td colspan="5">
+            <div class="form-container">
+                <form onsubmit="saveMember(event, ${isEdit ? member.id : 'null'})">
+                    <div class="form-grid">
+                        <input type="text" id="member-gameName" placeholder="遊戲名稱*" value="${member ? member.gameName : ''}" ${isLocked ? 'disabled' : ''} required>
+                        <input type="text" id="member-gameId" placeholder="遊戲ID*" value="${member ? member.gameId : ''}" ${isLocked ? 'disabled' : ''} required>
+                        
+                        ${guildInputHtml}
+                        
+                        <div style="grid-column: span 2;">
+                            <label style="font-size: 12px; color: #666; display: block; margin-bottom: 4px;">擁有的花朵：</label>
+
+                            <input type="text" id="member-flower-search" placeholder="🔍 搜尋花朵..."
+                                oninput="applyMemberFlowerFilter()"
+                                style="width: 100%; padding: 6px; margin-bottom: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+
+                            <!-- ✨ 等級快速篩選列 + 只看已勾選開關（純前端過濾顯示，不影響勾選/儲存） -->
+                            <div class="flower-filter-bar">
+                                <button type="button" class="grade-filter-btn active" data-grade="" onclick="setMemberGradeFilter(this, '')">全部</button>
+                                <button type="button" class="grade-filter-btn" data-grade="紅" onclick="setMemberGradeFilter(this, '紅')">紅</button>
+                                <button type="button" class="grade-filter-btn" data-grade="橙" onclick="setMemberGradeFilter(this, '橙')">橙</button>
+                                <button type="button" class="grade-filter-btn" data-grade="紫" onclick="setMemberGradeFilter(this, '紫')">紫</button>
+                                <button type="button" class="grade-filter-btn" data-grade="藍" onclick="setMemberGradeFilter(this, '藍')">藍</button>
+                                <button type="button" class="grade-filter-btn" data-grade="綠" onclick="setMemberGradeFilter(this, '綠')">綠</button>
+                                <label class="checked-only-toggle">
+                                    <input type="checkbox" id="member-flower-checked-only" onchange="applyMemberFlowerFilter()">
+                                    只看已勾選
+                                </label>
+                            </div>
+
+                            <div style="margin-bottom: 8px; display: flex; gap: 8px;">
+                                <button type="button" onclick="toggleAllFlowers(true)"
+                                    style="padding: 4px 12px; font-size: 12px; background: #e5e7eb; border: none; border-radius: 4px; cursor: pointer; color: #374151;">
+                                    ✅ 全選
+                                </button>
+                                <button type="button" onclick="toggleAllFlowers(false)"
+                                    style="padding: 4px 12px; font-size: 12px; background: #e5e7eb; border: none; border-radius: 4px; cursor: pointer; color: #374151;">
+                                    ⬜ 全不選
+                                </button>
+                            </div>
+
+                            <div id="member-flower-list" class="checkbox-list" style="
+                                background: white; 
+                                max-height: 200px; 
+                                display: grid; 
+                                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); 
+                                gap: 4px;
+                            ">
+                                ${flowersHtml}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-buttons">
+                        ${isLocked ? '' : '<button type="submit" class="save-btn">💾 儲存</button>'}
+                        <button type="button" class="form-cancel-btn" onclick="renderMembers()">❌ 取消</button>
+                    </div>
+                </form>
+            </div>
+        </td>
+    `;
+
+                        if (isEdit) {
+                            const rows = tbody.getElementsByTagName('tr');
+                            for (let i = 0; i < rows.length; i++) {
+                                if (member && rows[i].innerHTML.includes(member.gameId)) {
+                                    rows[i].replaceWith(formRow);
+                                    break;
+                                }
+                            }
+                        } else {
+                            tbody.insertBefore(formRow, tbody.firstChild);
+                        }
+                    }
+                    function editMember(id) {
+                        const member = members.find(m => m.id === id);
+                        if (!member) return;
+                        // 權限：未登入提示登入；非擁有者且非管理員不可編輯
+                        if (!isAuthed()) { notify('請先登入才能編輯成員。'); return; }
+                        if (!canEditOwned(member.ownerId)) { notify('權限不足：只能編輯自己建立的成員。'); return; }
+                        showMemberForm(member);
+                    }
+                    // 新增成員前的權限檢查
+                    function tryAddMember() {
+                        if (!isAuthed()) { notify('請先登入才能新增成員。'); return; }
+                        showMemberForm();
+                    }
+
+async function saveMember(event, id) {
+    event.preventDefault();
+
+    // 權限：必須登入
+    if (!isAuthed()) { notify('請先登入才能儲存成員。'); return; }
+
+    const gameNameInput = document.getElementById('member-gameName');
+    const gameIdInput = document.getElementById('member-gameId');
+    const guildInput = document.getElementById('member-guild'); // 可能是選單也可能是隱藏欄位
+
+    const newName = gameNameInput.value.trim();
+
+    // 取得選中的花朵
+    const checkboxes = document.querySelectorAll('input[name="member-flower-select"]:checked');
+    const ownedFlowers = Array.from(checkboxes).map(cb => cb.value);
+
+    const item = {
+        gameName: newName,
+        gameId: gameIdInput.value,
+        guild: guildInput.value,
+        ownedFlowers
+    };
+
+    const saveBtn = event.target.querySelector('.save-btn');
+    if (saveBtn) { saveBtn.textContent = '☁️ 儲存中...'; saveBtn.disabled = true; }
+
+    try {
+        if (id) {
+            // --- 編輯模式 ---
+            const index = members.findIndex(m => m.id === id);
+            if (index === -1) return;
+            const existing = members[index];
+
+            // 權限：只能改自己建立的（admin 例外）
+            if (!canEditOwned(existing.ownerId)) {
+                notify('權限不足：只能修改自己建立的成員。');
+                return;
+            }
+
+            const oldName = existing.gameName;
+            const result = await apiPost({ action: 'updateItem', type: 'members', id, item });
+            if (!result || !result.success) {
+                notify('儲存失敗：' + ((result && result.error) || '未知錯誤'));
+                return;
+            }
+            // 更新本地陣列（保留 ownerId）
+            members[index] = { ...existing, ...item };
+
+            // ✨ 改名連動：只更新「自己有權編輯」的競賽紀錄，避免越權
+            if (oldName !== newName) {
+                const ownedComps = competitions.filter(c =>
+                    String(c.memberName) === String(oldName) && canEditOwned(c.ownerId)
+                );
+                const blockedCount = competitions.filter(c =>
+                    String(c.memberName) === String(oldName) && !canEditOwned(c.ownerId)
+                ).length;
+
+                for (const c of ownedComps) {
+                    const r = await apiPost({
+                        action: 'updateItem', type: 'competitions', id: c.id,
+                        item: { memberName: newName, selectedFlowers: c.selectedFlowers }
+                    });
+                    if (r && r.success) { c.memberName = newName; }
+                }
+                if (blockedCount > 0) {
+                    notify(`已更新你自己的競賽紀錄名稱。\n另有 ${blockedCount} 筆由他人建立的競賽紀錄仍使用舊名「${oldName}」，需由該擁有者或管理員自行更新。`);
+                }
+                renderCompetitions();
+            }
+        } else {
+            // --- 新增模式 ---
+            const result = await apiPost({ action: 'addItem', type: 'members', item });
+            if (!result || !result.success) {
+                notify('新增失敗：' + ((result && result.error) || '未知錯誤'));
+                return;
+            }
+            // 後端自動記 ownerId = 目前使用者
+            members.push({ id: result.id, ...item, ownerId: currentUser.username });
+        }
+
+        renderMembers();
+        renderFlowers(); // 連動更新花朵列表的擁有者
+    } catch (err) {
+        notify('儲存失敗：' + err.message);
+    } finally {
+        if (saveBtn) { saveBtn.textContent = '💾 儲存'; saveBtn.disabled = false; }
+    }
+}
+                    async function deleteMember(id) {
+                        const member = members.find(m => m.id === id);
+                        if (!member) return;
+                        if (!isAuthed()) { notify('請先登入。'); return; }
+                        if (!canEditOwned(member.ownerId)) {
+                            notify('權限不足：只能刪除自己建立的成員。');
+                            return;
+                        }
+
+                        if (await showConfirm('確定要刪除此成員嗎?')) {
+                            try {
+                                const result = await apiPost({ action: 'deleteItem', type: 'members', id });
+                                if (!result || !result.success) {
+                                    notify('刪除失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                members = members.filter(m => m.id !== id);
+                                renderMembers();
+                                renderFlowers();
+                            } catch (err) {
+                                notify('刪除失敗：' + err.message);
+                            }
+                        }
+                    }
+
+                    function toggleFlowerForm() {
+                        // 花朵僅管理員可新增
+                        if (!isAdmin()) { notify('權限不足：僅管理員可新增花朵。'); return; }
+
+                        const formBox = document.getElementById('flower-form-box');
+                        const btnText = document.getElementById('flower-btn-text');
+
+                        if (formBox.classList.contains('hidden')) {
+                            showFlowerFormInBox();
+                            btnText.textContent = '取消新增';
+                        } else {
+                            formBox.classList.add('hidden');
+                            formBox.innerHTML = '';
+                            btnText.textContent = '新增花朵資料';
+                        }
+                    }
+
+                    function showFlowerFormInBox(flower = null) {
+                        const isEdit = flower !== null;
+                        const formBox = document.getElementById('flower-form-box');
+
+                        // 花朵新增/編輯都僅限管理員 (雙重防護)
+                        if (!isAdmin()) {
+                            notify('權限不足：僅管理員可操作花朵。');
+                            return;
+                        }
+
+                        formBox.innerHTML = `
+                                                <form onsubmit="saveFlower(event, ${isEdit ? flower.id : 'null'})">
+                                                    <div class="form-grid">
+                                                        <input type="text" id="flower-name" placeholder="花朵名稱*" value="${flower ? flower.name : ''}" required>
+                                                        <select id="flower-source" required>
+                                                            <option value="">選擇來源*</option>
+                                                            ${flowerSources.map(s => `<option value="${s}" ${flower && flower.source === s ? 'selected' : ''}>${s}</option>`).join('')}
+                                                        </select>
+                                                        <select id="flower-grade" required>
+                                                            <option value="">選擇等級*</option>
+                                                            ${flowerGrades.map(g => `<option value="${g.value}" ${flower && flower.grade === g.value ? 'selected' : ''}>${g.label}</option>`).join('')}
+                                                        </select>
+                                                        <input type="number" id="flower-score" placeholder="競賽分數*" value="${flower ? flower.competitionScore : ''}" required>
+                                                        <input type="date" id="flower-date" value="${flower ? flower.releaseDate : ''}">
+                                                        <input type="text" id="flower-vase" placeholder="花瓶" value="${flower ? flower.vase : ''}">
+                                                    </div>
+                                                    <textarea id="flower-note" placeholder="備註" rows="2">${flower ? flower.note : ''}</textarea>
+                                                    <div class="form-buttons" style="margin-top: 12px;">
+                                                        <button type="submit" class="save-btn">💾 儲存</button>
+                                                        <button type="button" class="form-cancel-btn" onclick="closeFlowerForm()">❌ 取消</button>
+                                                    </div>
+                                                </form>
+                                            `;
+
+                        formBox.classList.remove('hidden');
+                    }
+
+                    function closeFlowerForm() {
+                        const formBox = document.getElementById('flower-form-box');
+                        const btnText = document.getElementById('flower-btn-text');
+                        if (formBox) formBox.classList.add('hidden');
+                        if (formBox) formBox.innerHTML = '';
+                        if (btnText) btnText.textContent = '新增花朵資料';
+                        renderFlowers();
+                    }
+
+                    async function saveFlower(event, id) {
+                        event.preventDefault();
+
+                        // 權限檢查：花朵新增/編輯都僅限管理員
+                        if (!isAdmin()) {
+                            notify('權限不足：只有管理員可以新增或修改花朵資料。');
+                            return;
+                        }
+
+                        const name = document.getElementById('flower-name').value;
+                        const source = document.getElementById('flower-source').value;
+                        const grade = document.getElementById('flower-grade').value;
+                        const competitionScore = parseInt(document.getElementById('flower-score').value);
+                        const releaseDate = document.getElementById('flower-date').value;
+                        const vase = document.getElementById('flower-vase').value;
+                        const note = document.getElementById('flower-note').value;
+                        const item = { name, source, grade, competitionScore, releaseDate, vase, note };
+
+                        const saveBtn = event.target.querySelector('.save-btn');
+                        if (saveBtn) { saveBtn.textContent = '☁️ 儲存中...'; saveBtn.disabled = true; }
+
+                        try {
+                            if (id) {
+                                const index = flowers.findIndex(f => f.id === id);
+                                const oldName = flowers[index].name;
+
+                                const result = await apiPost({ action: 'updateItem', type: 'flowers', id, item });
+                                if (!result || !result.success) {
+                                    notify('儲存失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                flowers[index] = { ...flowers[index], ...item };
+
+                                // 改名連動（管理員可改任何 members / competitions，逐筆 updateItem）
+                                if (oldName !== name) {
+                                    for (const m of members) {
+                                        if (m.ownedFlowers && m.ownedFlowers.includes(oldName)) {
+                                            const newOwned = m.ownedFlowers.map(f => f === oldName ? name : f);
+                                            const r = await apiPost({
+                                                action: 'updateItem', type: 'members', id: m.id,
+                                                item: { gameName: m.gameName, gameId: m.gameId, guild: m.guild, ownedFlowers: newOwned }
+                                            });
+                                            if (r && r.success) m.ownedFlowers = newOwned;
+                                        }
+                                    }
+                                    for (const c of competitions) {
+                                        if (c.selectedFlowers && c.selectedFlowers.includes(oldName)) {
+                                            const newSel = c.selectedFlowers.map(f => f === oldName ? name : f);
+                                            const r = await apiPost({
+                                                action: 'updateItem', type: 'competitions', id: c.id,
+                                                item: { memberName: c.memberName, selectedFlowers: newSel }
+                                            });
+                                            if (r && r.success) c.selectedFlowers = newSel;
+                                        }
+                                    }
+                                }
+                            } else {
+                                // 新增 (僅管理員)
+                                const result = await apiPost({ action: 'addItem', type: 'flowers', item });
+                                if (!result || !result.success) {
+                                    notify('新增失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                flowers.push({ id: result.id, ...item });
+                            }
+
+                            closeFlowerForm();
+                            renderFlowers();
+                            renderMembers(); // 更新成員列表的擁有狀態
+                            renderCompetitions();
+                        } catch (err) {
+                            notify('儲存失敗：' + err.message);
+                        } finally {
+                            if (saveBtn) { saveBtn.textContent = '💾 儲存'; saveBtn.disabled = false; }
+                        }
+                    }
+
+                    function editFlower(id) {
+                        if (!isAdmin()) {
+                            notify('權限不足：僅管理員可編輯花朵。');
+                            return;
+                        }
+                        const flower = flowers.find(f => f.id === id);
+                        showFlowerFormInBox(flower);
+                        document.getElementById('flower-btn-text').textContent = '取消編輯';
+                    }
+
+                    async function deleteFlower(id) {
+                        if (!isAdmin()) {
+                            notify('權限不足：僅管理員可刪除花朵。');
+                            return;
+                        }
+                        const flowerToDelete = flowers.find(f => f.id === id);
+                        if (!flowerToDelete) return;
+
+                        if (await showConfirm(`確定要刪除「${flowerToDelete.name}」嗎？\n注意：這將會從所有成員的擁有清單和競賽紀錄中移除此花朵！`)) {
+                            const targetName = flowerToDelete.name;
+                            try {
+                                const result = await apiPost({ action: 'deleteItem', type: 'flowers', id });
+                                if (!result || !result.success) {
+                                    notify('刪除失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                flowers = flowers.filter(f => f.id !== id);
+
+                                // 連動刪除（管理員逐筆 updateItem 清掉引用）
+                                for (const m of members) {
+                                    if (m.ownedFlowers && m.ownedFlowers.includes(targetName)) {
+                                        const newOwned = m.ownedFlowers.filter(f => f !== targetName);
+                                        const r = await apiPost({
+                                            action: 'updateItem', type: 'members', id: m.id,
+                                            item: { gameName: m.gameName, gameId: m.gameId, guild: m.guild, ownedFlowers: newOwned }
+                                        });
+                                        if (r && r.success) m.ownedFlowers = newOwned;
+                                    }
+                                }
+                                for (const c of competitions) {
+                                    if (c.selectedFlowers && c.selectedFlowers.includes(targetName)) {
+                                        const newSel = c.selectedFlowers.filter(f => f !== targetName);
+                                        const r = await apiPost({
+                                            action: 'updateItem', type: 'competitions', id: c.id,
+                                            item: { memberName: c.memberName, selectedFlowers: newSel }
+                                        });
+                                        if (r && r.success) c.selectedFlowers = newSel;
+                                    }
+                                }
+
+                                renderFlowers();
+                                renderMembers();
+                                renderCompetitions();
+                            } catch (err) {
+                                notify('刪除失敗：' + err.message);
+                            }
+                        }
+                    }
+
+                    function showCompetitionForm(competition = null) {
+                        const isEdit = competition !== null;
+                        const tbody = document.getElementById('competitions-table');
+
+                        const existingForm = tbody.querySelector('.form-row');
+                        if (existingForm) existingForm.remove();
+
+                        const selectedMember = competition ? members.find(m => m.gameName === competition.memberName) : null;
+
+                        const formRow = document.createElement('tr');
+                        formRow.className = 'form-row';
+                        formRow.innerHTML = `
+                                        <td colspan="3">
+                                            <div class="form-container">
+                                                <form onsubmit="saveCompetition(event, ${isEdit ? competition.id : 'null'})">
+                                                    <div style="margin-bottom: 12px;">
+                                                        <select id="comp-member" onchange="updateFlowerList()" required
+                                                            style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px;">
+                                                            <option value="">選擇成員*</option>
+                                                            ${members.map(m => `<option value="${m.gameName}" ${competition && competition.memberName === m.gameName ? 'selected' : ''}>${m.gameName}</option>`).join('')}
+                                                        </select>
+                                                    </div>
+
+                                                    <div style="margin-top: 12px;">
+                                                        <input type="text" id="comp-flower-search" placeholder="🔍 搜尋此成員的花朵..."
+                                                            onkeyup="filterCheckboxes(this, 'flower-checkboxes')"
+                                                            style="width: 100%; padding: 6px; margin-bottom: 6px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 13px;">
+
+                                                        <div id="flower-checkboxes" class="checkbox-list" style="
+                                                            background: white;
+                                                            max-height: 200px;
+                                                            overflow-y: auto;
+                                                            display: grid;
+                                                            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                                                            gap: 4px;
+                                                            padding: 8px;
+                                                            border: 1px solid #d1d5db;
+                                                            border-radius: 4px;
+                                                        ">
+                                                            ${selectedMember ? renderFlowerCheckboxes(selectedMember, competition ? competition.selectedFlowers : [], false) : '<p style="padding: 4px; color: #6b7280; grid-column: 1/-1;">請先選擇成員</p>'}
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-buttons" style="margin-top: 12px;">
+                                                        <button type="submit" class="save-btn">💾 儲存</button>
+                                                        <button type="button" class="form-cancel-btn" onclick="renderCompetitions()">❌ 取消</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    `;
+
+                        if (isEdit) {
+                            const rows = tbody.getElementsByTagName('tr');
+                            for (let i = 0; i < rows.length; i++) {
+                                if (rows[i].innerHTML.includes(competition.memberName)) {
+                                    rows[i].replaceWith(formRow);
+                                    break;
+                                }
+                            }
+                        } else {
+                            tbody.insertBefore(formRow, tbody.firstChild);
+                        }
+                    }
+
+                    function renderFlowerCheckboxes(member, selectedFlowers, disabled) {
+                        if (!member.ownedFlowers || member.ownedFlowers.length === 0) {
+                            return '<p style="padding: 4px; color: #ef4444; grid-column: 1/-1;">此成員尚未登記擁有的花朵，無法參加競賽。</p>';
+                        }
+
+                        return member.ownedFlowers.map(flowerName => `
+                                                <label class="checkbox-item" style="
+                                                    display: flex;
+                                                    align-items: center;
+                                                    padding: 4px;
+                                                    cursor: pointer;
+                                                    white-space: nowrap;
+                                                    overflow: hidden;
+                                                    text-overflow: ellipsis;
+                                                ">
+                                                    <input type="checkbox" name="comp-flowers" value="${flowerName}"
+                                                        ${selectedFlowers.includes(flowerName) ? 'checked' : ''}
+                                                        ${disabled ? 'disabled' : ''}>
+                                                    <span style="margin-left: 6px; font-size: 13px;">${flowerName}</span>
+                                                </label>
+                                            `).join('');
+                    }
+
+                    function updateFlowerList() {
+                        const memberName = document.getElementById('comp-member').value;
+                        const member = members.find(m => m.gameName === memberName);
+                        const checkboxDiv = document.getElementById('flower-checkboxes');
+                        const searchInput = document.getElementById('comp-flower-search'); // 抓搜尋框
+
+                        // ✨ 切換成員時，清空搜尋文字，讓使用者看見全部花朵
+                        if (searchInput) searchInput.value = '';
+
+                        if (member) {
+                            checkboxDiv.innerHTML = renderFlowerCheckboxes(member, [], false);
+                        } else {
+                            checkboxDiv.innerHTML = '<p style="padding: 8px; color: #6b7280;">請先選擇成員</p>';
+                        }
+                    }
+
+                    async function saveCompetition(event, id) {
+                        event.preventDefault();
+
+                        // 權限：必須登入
+                        if (!isAuthed()) { notify('請先登入才能儲存競賽紀錄。'); return; }
+
+                        const memberName = document.getElementById('comp-member').value;
+                        const checkboxes = document.querySelectorAll('input[name="comp-flowers"]:checked');
+                        const selectedFlowers = Array.from(checkboxes).map(cb => cb.value);
+                        const item = { memberName, selectedFlowers };
+
+                        const saveBtn = event.target.querySelector('.save-btn');
+                        if (saveBtn) { saveBtn.textContent = '☁️ 儲存中...'; saveBtn.disabled = true; }
+
+                        try {
+                            if (id) {
+                                const index = competitions.findIndex(c => c.id === id);
+                                if (index === -1) return;
+                                // 權限：只能改自己建立的（admin 例外）
+                                if (!canEditOwned(competitions[index].ownerId)) {
+                                    notify('權限不足：只能修改自己建立的競賽紀錄。');
+                                    return;
+                                }
+                                const result = await apiPost({ action: 'updateItem', type: 'competitions', id, item });
+                                if (!result || !result.success) {
+                                    notify('儲存失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                competitions[index] = { ...competitions[index], ...item };
+                            } else {
+                                const result = await apiPost({ action: 'addItem', type: 'competitions', item });
+                                if (!result || !result.success) {
+                                    notify('新增失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                competitions.push({ id: result.id, ...item, ownerId: currentUser.username });
+                            }
+                            renderCompetitions();
+                        } catch (err) {
+                            notify('儲存失敗：' + err.message);
+                        } finally {
+                            if (saveBtn) { saveBtn.textContent = '💾 儲存'; saveBtn.disabled = false; }
+                        }
+                    }
+
+                    // ==========================================
+                    // 1. 渲染函式 (加入點擊事件)
+                    // ==========================================
+
+                    // 渲染成員清單
+                    function renderMembers() {
+                        const tbody = document.getElementById('members-table');
+                        tbody.innerHTML = '';
+
+                        // 「新增成員」按鈕：登入才顯示
+                        const addBtn = document.getElementById('add-member-btn');
+                        if (addBtn) addBtn.style.display = isAuthed() ? '' : 'none';
+
+                        members.forEach(member => {
+                            // ✨ 擁有花改成標籤＋數量：🌸 N（0 顯示「無」），點擊開啟詳情卡
+                            const ownedCount = member.ownedFlowers ? member.ownedFlowers.length : 0;
+                            const ownedHtml = ownedCount > 0
+                                ? `<span class="owned-count" onclick="showMemberDetail(${member.id})">🌸 ${ownedCount}</span>`
+                                : `<span class="owned-count is-empty" onclick="showMemberDetail(${member.id})">無</span>`;
+
+                            // 僅「自己建立的」（或管理員）才顯示 編輯/刪除；其餘顯示鎖頭
+                            let actionHtml;
+                            if (canEditOwned(member.ownerId)) {
+                                actionHtml = `<button class="edit-btn" onclick="editMember(${member.id})">✏️</button>`
+                                    + `<button class="delete-btn" onclick="deleteMember(${member.id})">🗑️</button>`;
+                            } else {
+                                actionHtml = `<span style="color:#ccc; font-size:12px; cursor: not-allowed; padding: 4px;">🔒</span>`;
+                            }
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                        <td data-label="遊戲名稱"><span class="clickable-link" onclick="showMemberDetail(${member.id})">${member.gameName}</span></td>
+                                        <td data-label="遊戲ID">${member.gameId}</td>
+                                        <td data-label="公會">${member.guild}</td>
+                                        <td data-label="擁有花">${ownedHtml}</td>
+                                        <td data-label="操作"><div class="actions">${actionHtml}</div></td>
+                                    `;
+                            tbody.appendChild(row);
+                        });
+
+                        renderSummary();
+                    }
+
+// 渲染花朵清單 (加入成員批量管理按鈕)
+function renderFlowers() {
+    const tbody = document.getElementById('flowers-table');
+    tbody.innerHTML = '';
+
+    // 「新增花朵資料」按鈕：僅管理員顯示
+    const addBtn = document.getElementById('add-flower-btn');
+    if (addBtn) addBtn.style.display = isAdmin() ? '' : 'none';
+
+    flowers.forEach(flower => {
+        const owners = members.filter(m => m.ownedFlowers && m.ownedFlowers.includes(flower.name)).map(m => m.gameName);
+        const gradeClass = 'grade-' + getGradeColorClass(flower.grade);
+
+        // ✨ 中間 👥 是批量派發；花朵全部僅管理員可操作
+        const actionButtons = isAdmin() ? `
+            <button class="edit-btn" onclick="editFlower(${flower.id})" title="編輯花朵">✏️</button>
+            <button class="edit-btn" onclick="openDistributeModal(${flower.id})" title="管理擁有者" style="color:#0ea5e9;">👥</button>
+            <button class="delete-btn" onclick="deleteFlower(${flower.id})" title="刪除花朵">🗑️</button>
+        ` : `<span style="color:#ccc; font-size:12px;">🔒</span>`;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td data-label="花朵名稱"><span class="clickable-link" onclick="showFlowerDetail(${flower.id})">${flower.name}</span></td>
+
+            <td data-label="誰擁有" style="font-size: 13px;">${owners.length > 0 ? owners.join(', ') : '無'}</td>
+
+            <td data-label="等級"><span class="${gradeClass}">${flower.grade}</span></td>
+            <td data-label="競賽分數">${flower.competitionScore}</td>
+            <td data-label="上市日期">${flower.releaseDate || '-'}</td>
+            <td data-label="花瓶">${flower.vase || '-'}</td>
+            <td data-label="備註" style="font-size: 13px; color: #4b5563;">${flower.note || '-'}</td>
+
+            <td data-label="來源">${flower.source}</td>
+
+            <td data-label="操作"><div class="actions">${actionButtons}</div></td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    renderSummary();
+}
+
+                    // ✨ 花朵等級排序功能
+                    let isGradeDesc = false; // 排序狀態
+
+                    function sortFlowersByGrade() {
+                        // 1. 切換排序順序
+                        isGradeDesc = !isGradeDesc;
+
+                        // 2. 更新箭頭圖示
+                        const icon = document.getElementById('grade-sort-icon');
+                        if (icon) icon.textContent = isGradeDesc ? '↓' : '↑'; // ↓代表高等級(紅)在上面
+
+                        // 3. 定義等級的分數 (權重)，讓紅最重，綠最輕
+                        const gradeWeight = {
+                            '紅': 5,
+                            '橙': 4,
+                            '紫': 3,
+                            '藍': 2,
+                            '綠': 1
+                        };
+
+                        // 4. 執行排序
+                        flowers.sort((a, b) => {
+                            // 取出等級的第一個字 (例如 "紅(仙品)" 取 "紅")
+                            const charA = a.grade ? a.grade.charAt(0) : '';
+                            const charB = b.grade ? b.grade.charAt(0) : '';
+
+                            // 轉換成數字權重，如果找不到就當作 0
+                            const weightA = gradeWeight[charA] || 0;
+                            const weightB = gradeWeight[charB] || 0;
+
+                            // 依照權重排序
+                            return isGradeDesc ? (weightB - weightA) : (weightA - weightB);
+                        });
+
+                        // 5. 重新渲染畫面
+                        renderFlowers();
+                    }
+
+                    // ✨ 花朵分數排序功能
+                    let isScoreDesc = false; // 記錄目前的排序狀態 (false=原本亂的, true=由高到低)
+
+                    function sortFlowersByScore() {
+                        // 1. 切換排序順序 (高->低 或 低->高)
+                        isScoreDesc = !isScoreDesc;
+
+                        // 2. 更新箭頭圖示
+                        const icon = document.getElementById('score-sort-icon');
+                        if (icon) icon.textContent = isScoreDesc ? '↓' : '↑'; // ↓代表由高到低
+
+                        // 3. 執行排序
+                        flowers.sort((a, b) => {
+                            const scoreA = parseInt(a.competitionScore) || 0;
+                            const scoreB = parseInt(b.competitionScore) || 0;
+
+                            // 如果是 Desc (由高到低)，就是 B - A
+                            // 如果是 Asc (由低到高)，就是 A - B
+                            return isScoreDesc ? (scoreB - scoreA) : (scoreA - scoreB);
+                        });
+
+                        // 4. 重新渲染畫面
+                        renderFlowers();
+                    }
+
+                    // 渲染競賽清單
+                    function renderCompetitions() {
+                        const tbody = document.getElementById('competitions-table');
+                        const guildFilter = document.getElementById('comp-guild-filter').value;
+
+                        // 「新增競賽記錄」按鈕：登入才顯示
+                        const addCompBtn = document.getElementById('add-competition-btn');
+                        if (addCompBtn) addCompBtn.style.display = isAuthed() ? '' : 'none';
+
+                        // ✨ 分別取得「花朵搜尋」與「成員搜尋」的文字
+                        const flowerSearchText = document.getElementById('competitions-flower-search').value.toLowerCase().trim();
+                        const memberSearchText = document.getElementById('competitions-member-search').value.toLowerCase().trim();
+
+                        tbody.innerHTML = '';
+
+                        const filteredCompetitions = competitions.filter(comp => {
+                            // 1. 檢查公會
+                            const member = members.find(m => m.gameName === comp.memberName);
+                            const memberGuild = member ? member.guild : '';
+                            if (guildFilter && memberGuild !== guildFilter) return false;
+
+                            // 2. ✨ 檢查成員名稱 (只看下方的搜尋框)
+                            if (memberSearchText && !comp.memberName.toLowerCase().includes(memberSearchText)) {
+                                return false;
+                            }
+
+                            // 3. ✨ 檢查花朵名稱 (只看上方的搜尋框)
+                            if (flowerSearchText) {
+                                // 把該成員選的所有花接成一串字串來檢查
+                                const flowersStr = comp.selectedFlowers.join(' ').toLowerCase();
+                                // 如果這串花裡面沒有包含搜尋的字，就剔除
+                                if (!flowersStr.includes(flowerSearchText)) {
+                                    return false;
+                                }
+                            }
+
+                            return true; // 通過所有檢查
+                        });
+
+                        // 渲染畫面
+                        filteredCompetitions.forEach(comp => {
+                            // 僅「自己建立的」（或管理員）才顯示 編輯/刪除；其餘顯示鎖頭
+                            let actionHtml;
+                            if (canEditOwned(comp.ownerId)) {
+                                actionHtml = `<button class="edit-btn" onclick="editCompetition(${comp.id})">✏️</button>`
+                                    + `<button class="delete-btn" onclick="deleteCompetition(${comp.id})">🗑️</button>`;
+                            } else {
+                                actionHtml = `<span style="color:#ccc; font-size:12px; cursor: not-allowed; padding: 4px;">🔒</span>`;
+                            }
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                        <td data-label="成員名稱"><span class="clickable-link" onclick="showCompetitionDetail(${comp.id})">${comp.memberName}</span></td>
+                                        <td data-label="選擇的花朵">${comp.selectedFlowers.length > 0 ? comp.selectedFlowers.join(', ') : '未選擇'}</td>
+                                        <td data-label="操作">
+                                            <div class="actions">${actionHtml}</div>
+                                        </td>
+                                    `;
+                            tbody.appendChild(row);
+                        });
+
+                        if (filteredCompetitions.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999; padding:20px;">沒有符合條件的資料</td></tr>';
+                        }
+
+                        renderSummary();
+                    }
+
+                    // 顯示花朵詳細資料
+                    function showFlowerDetail(id) {
+                        const flower = flowers.find(f => f.id === id);
+                        if (!flower) return;
+
+                        const owners = members.filter(m => m.ownedFlowers && m.ownedFlowers.includes(flower.name)).map(m => m.gameName);
+                        const gradeColor = getGradeColorCode(flower.grade);
+
+                        const html = `
+                                    <div class="modal-header">
+                                        <div class="modal-subtitle">花朵檔案</div>
+                                        <div class="modal-title">${flower.name}</div>
+                                    </div>
+                                    <div class="detail-row"><span class="detail-label">來源</span><span class="detail-value">${flower.source}</span></div>
+                                    <div class="detail-row"><span class="detail-label">等級</span><span class="detail-value" style="color:${gradeColor}; font-weight:bold;">${flower.grade}</span></div>
+                                    <div class="detail-row"><span class="detail-label">競賽分數</span><span class="detail-value">${flower.competitionScore}</span></div>
+                                    <div class="detail-row"><span class="detail-label">上市日期</span><span class="detail-value">${flower.releaseDate || '-'}</span></div>
+                                    <div class="detail-row"><span class="detail-label">花瓶</span><span class="detail-value">${flower.vase || '-'}</span></div>
+                                    <div class="detail-row"><span class="detail-label">備註</span><span class="detail-value">${flower.note || '-'}</span></div>
+
+                                    <div class="section-title">擁有者名單</div>
+                                    <div class="detail-value" style="text-align: left; line-height: 1.6; max-width: 100%;">
+                                        ${owners.length > 0 ? owners.join(' , ') : '目前無人擁有'}
+                                    </div>
+                                `;
+                        openModal(html);
+                    }
+
+                    // 顯示競賽詳細資料 (不計算總分版)
+                    function showCompetitionDetail(id) {
+                        const comp = competitions.find(c => c.id === id);
+                        if (!comp) return;
+
+                        // 產生花朵標籤 (只顯示名字和顏色，不顯示分數)
+                        const flowerListHtml = comp.selectedFlowers.map(fName => {
+                            const fInfo = flowers.find(f => f.name === fName);
+                            const color = fInfo ? getGradeColorCode(fInfo.grade) : '#666';
+
+                            return `<span class="flower-tag" style="border-color:${color}40;">
+                                        <span style="width:8px; height:8px; background:${color}; border-radius:50%; margin-right:6px;"></span>
+                                        ${fName}
+                                    </span>`;
+                        }).join('');
+
+                        const html = `
+                                    <div class="modal-header">
+                                        <div class="modal-subtitle">本週競賽紀錄</div>
+                                        <div class="modal-title">${comp.memberName}</div>
+                                    </div>
+
+                                    <div class="detail-row">
+                                        <span class="detail-label">使用花朵數</span>
+                                        <span class="detail-value">${comp.selectedFlowers.length} 朵</span>
+                                    </div>
+
+                                    <div class="section-title">參賽花朵清單</div>
+                                    <div class="tags-container">${flowerListHtml || '<span style="color:#999;">未選擇花朵</span>'}</div>
+                                `;
+                        openModal(html);
+                    }
+
+                    // ==========================================
+                    // 3. 輔助工具
+                    // ==========================================
+
+                    function openModal(htmlContent) {
+                        const modal = document.getElementById('universal-modal');
+                        document.getElementById('modal-body-content').innerHTML = htmlContent;
+                        modal.classList.add('show');
+                    }
+
+                    function closeModal(event) {
+                        // 點擊背景或關閉按鈕時觸發
+                        if (event && event.target.id !== 'universal-modal' && !event.target.classList.contains('modal-close-btn')) return;
+                        document.getElementById('universal-modal').classList.remove('show');
+                    }
+
+                    function generateFlowerTags(flowerList) {
+                        if (!flowerList || flowerList.length === 0) return '<span style="color:#999; font-size:13px;">無</span>';
+                        return flowerList.map(fName => {
+                            const fInfo = flowers.find(f => f.name === fName);
+                            const color = fInfo ? getGradeColorCode(fInfo.grade) : '#374151';
+                            return `<span class="flower-tag" style="color:${color}; border-color:${color}30; background:${color}08;">${fName}</span>`;
+                        }).join('');
+                    }
+
+                    function getGradeColorCode(grade) {
+                        if (!grade) return '#374151';
+                        if (grade.includes('紅')) return '#ef4444';
+                        if (grade.includes('橙')) return '#f97316';
+                        if (grade.includes('紫')) return '#a855f7';
+                        if (grade.includes('藍')) return '#3b82f6';
+                        if (grade.includes('綠')) return '#22c55e';
+                        return '#374151';
+                    }
+
+                    function getGradeColorClass(grade) {
+                        if (!grade) return 'gray';
+                        return grade.split(':')[0].toLowerCase()
+                            .replace('紅', 'red').replace('橙', 'orange').replace('紫', 'purple')
+                            .replace('藍', 'blue').replace('綠', 'green');
+                    }
+
+                    function editCompetition(id) {
+                        const competition = competitions.find(c => c.id === id);
+                        if (!competition) return;
+                        if (!isAuthed()) { notify('請先登入才能編輯競賽紀錄。'); return; }
+                        if (!canEditOwned(competition.ownerId)) {
+                            notify('權限不足：只能編輯自己建立的競賽紀錄。');
+                            return;
+                        }
+                        showCompetitionForm(competition);
+                    }
+
+                    function tryAddCompetition() {
+                        if (!isAuthed()) { notify('請先登入才能新增競賽紀錄。'); return; }
+                        showCompetitionForm();
+                    }
+
+                    async function deleteCompetition(id) {
+                        const competition = competitions.find(c => c.id === id);
+                        if (!competition) return;
+                        if (!isAuthed()) { notify('請先登入。'); return; }
+                        if (!canEditOwned(competition.ownerId)) {
+                            notify('權限不足：只能刪除自己建立的競賽紀錄。');
+                            return;
+                        }
+                        if (await showConfirm('確定要刪除此競賽記錄嗎?')) {
+                            try {
+                                const result = await apiPost({ action: 'deleteItem', type: 'competitions', id });
+                                if (!result || !result.success) {
+                                    notify('刪除失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                competitions = competitions.filter(c => c.id !== id);
+                                renderCompetitions();
+                            } catch (err) {
+                                notify('刪除失敗：' + err.message);
+                            }
+                        }
+                    }
+                    function filterCheckboxes(input, containerId) {
+                        // ✨ 關鍵修改：加上 .trim() 去除手機自動產生的空白
+                        const filter = input.value.toLowerCase().trim();
+
+                        const container = document.getElementById(containerId);
+                        const labels = container.getElementsByTagName('label'); // 抓出所有選項
+
+                        for (let i = 0; i < labels.length; i++) {
+                            const span = labels[i].getElementsByTagName('span')[0]; // 抓出文字部分
+                            if (span) {
+                                const txtValue = span.textContent || span.innerText;
+                                // 如果文字包含搜尋關鍵字，就顯示；否則隱藏
+                                if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                                    labels[i].style.display = "";
+                                    labels[i].classList.remove('hidden');
+                                } else {
+                                    labels[i].style.display = "none";
+                                }
+                            }
+                        }
+                    }
+
+                    // 補上這個函式，點擊成員名字才會有反應
+                    function showMemberDetail(id) {
+                        const member = members.find(m => m.id === id);
+                        if (!member) return;
+
+                        const flowerTags = generateFlowerTags(member.ownedFlowers);
+
+                        const html = `
+                                    <div class="modal-header">
+                                        <div class="modal-subtitle">成員資訊</div>
+                                        <div class="modal-title">${member.gameName}</div>
+                                    </div>
+                                    <div class="detail-row"><span class="detail-label">遊戲 ID</span><span class="detail-value">${member.gameId}</span></div>
+                                    <div class="detail-row"><span class="detail-label">所屬公會</span><span class="detail-value">${member.guild}</span></div>
+
+                                    <div class="section-title">擁有的花朵 (${member.ownedFlowers ? member.ownedFlowers.length : 0})</div>
+                                    <div class="tags-container">${flowerTags}</div>
+                                `;
+                        openModal(html);
+                    }
+
+                    // ==========================================
+                    // 🏢 公會管理功能
+                    // ==========================================
+
+                    // 渲染公會管理區 (顯示標籤)
+                    function renderGuildManager() {
+                        const container = document.getElementById('guild-list-display');
+                        if (!container) return;
+
+                        container.innerHTML = guilds.length === 0
+                            ? '<span style="color:#94a3b8;">尚未建立任何公會，請上方輸入並新增。</span>'
+                            : '';
+
+                        guilds.forEach((g, index) => {
+                            const tag = document.createElement('div');
+                            tag.className = 'guild-tag';
+                            tag.innerHTML = `
+            ${g}
+            <span class="guild-delete-btn" onclick="deleteGuild(${index})">×</span>
+        `;
+                            container.appendChild(tag);
+                        });
+
+                        // 每次更新公會列表時，順便更新「競賽頁面」的篩選選單
+                        initCompGuildFilter();
+                    }
+
+                    // 新增公會 (僅管理員)
+                    async function addGuild() {
+                        if (!isAdmin()) return notify('權限不足：僅管理員可新增公會。');
+
+                        const input = document.getElementById('new-guild-name');
+                        const name = input.value.trim();
+
+                        if (!name) return notify('請輸入公會名稱');
+                        if (guilds.includes(name)) return notify('此公會已經存在');
+
+                        try {
+                            const result = await apiPost({ action: 'addItem', type: 'guilds', item: { name } });
+                            if (!result || !result.success) {
+                                notify('新增失敗：' + ((result && result.error) || '未知錯誤'));
+                                return;
+                            }
+                            guilds.push(name);
+                            input.value = ''; // 清空輸入框
+                            renderGuildManager(); // 更新畫面
+                        } catch (err) {
+                            notify('新增失敗：' + err.message);
+                        }
+                    }
+
+                    // 刪除公會 (僅管理員，後端以 name 比對)
+                    async function deleteGuild(index) {
+                        if (!isAdmin()) return notify('權限不足：僅管理員可刪除公會。');
+
+                        const guildName = guilds[index];
+                        if (await showConfirm(`確定要刪除公會「${guildName}」嗎？\n(注意：現有成員的公會資料不會被清除，但選單中將不再顯示)`)) {
+                            try {
+                                const result = await apiPost({ action: 'deleteItem', type: 'guilds', name: guildName });
+                                if (!result || !result.success) {
+                                    notify('刪除失敗：' + ((result && result.error) || '未知錯誤'));
+                                    return;
+                                }
+                                guilds.splice(index, 1);
+                                renderGuildManager();
+                            } catch (err) {
+                                notify('刪除失敗：' + err.message);
+                            }
+                        }
+                    }
+
+                    // ✨ 全選/全不選功能 (支援搜尋篩選)
+                    function toggleAllFlowers(checkStatus) {
+                        const container = document.getElementById('member-flower-list');
+                        const labels = container.getElementsByTagName('label');
+
+                        for (let i = 0; i < labels.length; i++) {
+                            // 只針對目前「顯示中」的選項操作 (支援搜尋後全選)
+                            if (labels[i].style.display !== 'none' && !labels[i].classList.contains('hidden')) {
+                                const checkbox = labels[i].querySelector('input[type="checkbox"]');
+                                if (checkbox) {
+                                    checkbox.checked = checkStatus;
+                                }
+                            }
+                        }
+
+                    }
+
+                    // ✨ 選花清單：等級快速篩選 + 強化搜尋（純前端顯示/隱藏，不影響勾選狀態與儲存）
+                    let memberFlowerGradeFilter = ''; // '' = 全部；其餘為等級首字（紅/橙/紫/藍/綠）
+
+                    // 點擊等級篩選按鈕：切換 active 樣式並套用篩選
+                    function setMemberGradeFilter(btn, grade) {
+                        memberFlowerGradeFilter = grade;
+                        const bar = btn.parentElement;
+                        if (bar) {
+                            bar.querySelectorAll('.grade-filter-btn').forEach(b => b.classList.remove('active'));
+                        }
+                        btn.classList.add('active');
+                        applyMemberFlowerFilter();
+                    }
+
+                    // 綜合套用三項條件：搜尋文字、等級、只看已勾選
+                    function applyMemberFlowerFilter() {
+                        const container = document.getElementById('member-flower-list');
+                        if (!container) return;
+
+                        const searchInput = document.getElementById('member-flower-search');
+                        const checkedOnlyInput = document.getElementById('member-flower-checked-only');
+                        const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                        const checkedOnly = checkedOnlyInput ? checkedOnlyInput.checked : false;
+
+                        const labels = container.getElementsByTagName('label');
+                        for (let i = 0; i < labels.length; i++) {
+                            const label = labels[i];
+                            const span = label.getElementsByTagName('span')[0];
+                            const txt = span ? (span.textContent || span.innerText).toLowerCase() : '';
+                            const grade = label.getAttribute('data-grade') || '';
+                            const checkbox = label.querySelector('input[type="checkbox"]');
+                            const isChecked = checkbox ? checkbox.checked : false;
+
+                            const matchKeyword = !keyword || txt.indexOf(keyword) > -1;
+                            const matchGrade = !memberFlowerGradeFilter || grade === memberFlowerGradeFilter;
+                            const matchChecked = !checkedOnly || isChecked;
+
+                            if (matchKeyword && matchGrade && matchChecked) {
+                                label.style.display = '';
+                                label.classList.remove('hidden');
+                            } else {
+                                label.style.display = 'none';
+                            }
+                        }
+                    }
+
+                    // ==========================================
+// 👥 花朵批量派發功能 (管理員專用)
+// ==========================================
+
+let currentDistributeFlowerId = null;
+
+function openDistributeModal(flowerId) {
+    if (!isAdmin()) return notify('權限不足：僅管理員可批量派發擁有者。');
+
+    const flower = flowers.find(f => f.id === flowerId);
+    if (!flower) return;
+    
+    currentDistributeFlowerId = flowerId;
+
+    // 產生成員列表 HTML
+    const membersHtml = members.map(m => {
+        const hasFlower = m.ownedFlowers && m.ownedFlowers.includes(flower.name);
+        return `
+            <label class="checkbox-item" style="display:flex; justify-content:space-between; padding:8px; border-bottom:1px dashed #eee;">
+                <div style="display:flex; align-items:center;">
+                    <input type="checkbox" name="distribute-member" value="${m.id}" ${hasFlower ? 'checked' : ''}>
+                    <span style="margin-left:8px; font-weight:bold;">${m.gameName}</span>
+                    <span style="margin-left:8px; font-size:12px; color:#666; background:#f3f4f6; padding:2px 6px; border-radius:4px;">${m.guild}</span>
+                </div>
+                ${hasFlower ? '<span style="font-size:12px; color:#16a34a;">已擁有</span>' : ''}
+            </label>
+        `;
+    }).join('');
+
+    const html = `
+        <div class="modal-header">
+            <div class="modal-subtitle">批量管理擁有者</div>
+            <div class="modal-title" style="color:#2563eb;">${flower.name}</div>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <input type="text" placeholder="🔍 搜尋成員..." oninput="filterDistributeList(this)" 
+                   style="width:100%; padding:8px; border:1px solid #ddd; border-radius:4px;">
+        </div>
+
+        <div style="margin-bottom: 10px; display: flex; gap: 8px;">
+            <button type="button" onclick="toggleAllDistribute(true)" style="padding: 4px 12px; background: #e5e7eb; border: none; border-radius: 4px; cursor: pointer;">✅ 全選</button>
+            <button type="button" onclick="toggleAllDistribute(false)" style="padding: 4px 12px; background: #e5e7eb; border: none; border-radius: 4px; cursor: pointer;">⬜ 全不選</button>
+        </div>
+
+        <div id="distribute-list" style="max-height: 300px; overflow-y: auto; border: 1px solid #eee; border-radius: 4px;">
+            ${membersHtml}
+        </div>
+
+        <div class="form-buttons" style="margin-top: 16px;">
+            <button onclick="saveFlowerDistribution()" class="save-btn" style="width:100%; justify-content:center;">💾 儲存變更</button>
+        </div>
+    `;
+    
+    openModal(html);
+}
+
+// 儲存派發結果 (管理員專用：對每個有變動的成員逐筆 updateItem)
+async function saveFlowerDistribution() {
+    if (!currentDistributeFlowerId) return;
+    if (!isAdmin()) return notify('權限不足：僅管理員可批量派發擁有者。');
+
+    const flower = flowers.find(f => f.id === currentDistributeFlowerId);
+    if (!flower) return;
+
+    const checkboxes = document.querySelectorAll('input[name="distribute-member"]');
+    const checkedMemberIds = Array.from(checkboxes).filter(cb => cb.checked).map(cb => String(cb.value));
+
+    // 先算出有變動的成員與其新的 ownedFlowers，不直接改全域陣列
+    const changes = [];
+    members.forEach(m => {
+        const shouldHave = checkedMemberIds.includes(String(m.id));
+        const owned = Array.isArray(m.ownedFlowers) ? m.ownedFlowers : [];
+        const actuallyHas = owned.includes(flower.name);
+
+        if (shouldHave && !actuallyHas) {
+            changes.push({ member: m, newOwned: owned.concat([flower.name]) });
+        } else if (!shouldHave && actuallyHas) {
+            changes.push({ member: m, newOwned: owned.filter(f => f !== flower.name) });
+        }
+    });
+
+    if (changes.length === 0) { closeModal(); return; }
+
+    const saveBtn = document.querySelector('#universal-modal .save-btn');
+    if (saveBtn) { saveBtn.textContent = '☁️ 儲存中...'; saveBtn.disabled = true; }
+
+    let failCount = 0;
+    try {
+        for (const ch of changes) {
+            const m = ch.member;
+            const r = await apiPost({
+                action: 'updateItem', type: 'members', id: m.id,
+                item: { gameName: m.gameName, gameId: m.gameId, guild: m.guild, ownedFlowers: ch.newOwned }
+            });
+            if (r && r.success) {
+                m.ownedFlowers = ch.newOwned; // 成功才更新本地
+            } else {
+                failCount++;
+            }
+        }
+
+        renderFlowers(); // 更新列表顯示的擁有者
+        renderMembers(); // 更新成員列表
+        closeModal();
+        if (failCount > 0) {
+            notify(`部分更新失敗（${failCount} 筆），其餘已更新「${flower.name}」的擁有者名單。`);
+        } else {
+            notify(`已成功更新「${flower.name}」的擁有者名單！`);
+        }
+    } catch (err) {
+        notify('儲存失敗：' + err.message);
+    } finally {
+        if (saveBtn) { saveBtn.textContent = '💾 儲存變更'; saveBtn.disabled = false; }
+    }
+}
+
+// 搜尋篩選成員
+function filterDistributeList(input) {
+    const filter = input.value.toLowerCase().trim();
+    const list = document.getElementById('distribute-list');
+    const labels = list.getElementsByTagName('label');
+    
+    for (let label of labels) {
+        const text = label.textContent.toLowerCase();
+        label.style.display = text.includes(filter) ? '' : 'none';
+    }
+}
+
+// 全選/全不選 (僅針對篩選後的顯示項目)
+function toggleAllDistribute(checked) {
+    const list = document.getElementById('distribute-list');
+    const labels = list.getElementsByTagName('label');
+    
+    for (let label of labels) {
+        if (label.style.display !== 'none') {
+            const cb = label.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = checked;
+        }
+    }
+}
+
+                    window.onload = init;
+                </script>
+</body>
+</html>
