@@ -79,6 +79,10 @@
                 background-color: #b91c1c;
             }
 
+        /* 帳號表單（修改密碼 / 建立二級管理者） */
+        .pw-form { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 4px; }
+        .pw-form input { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; width: 100%; box-sizing: border-box; }
+
         .login-form {
             position: absolute;
             top: 100%;
@@ -869,6 +873,8 @@
                 </div>
                 <div id="logoutArea" class="logout-area hidden">
                     <span id="currentUserLabel"></span>
+                    <button class="logout-btn" style="background-color:#0ea5e9;" onclick="showChangePasswordModal()">修改密碼</button>
+                    <button id="userMgmtBtn" class="logout-btn" style="background-color:#7c3aed; display:none;" onclick="showUserManagement()">使用者管理</button>
                     <button class="logout-btn" onclick="handleLogout()">登出</button>
                 </div>
             </div>
@@ -1048,10 +1054,11 @@
 
                     // 輔助函式：登入狀態 / 管理員判斷
                     function isAuthed() { return !!authToken && !!currentUser; }
-                    function isAdmin() { return isAuthed() && currentUser.role === 'admin'; }
+                    function isAdmin() { return isAuthed() && currentUser.role === 'admin'; }            // 一級管理者（帳號管理權）
+                    function isManager() { return isAuthed() && (currentUser.role === 'admin' || currentUser.role === 'admin2'); } // 一級或二級（資料管理權）
                     // 判斷某筆 members/competitions 是否屬於目前使用者（admin 視為全部可動）
                     function canEditOwned(ownerId) {
-                        if (isAdmin()) return true;
+                        if (isManager()) return true;
                         if (!isAuthed()) return false;
                         return String(ownerId) === String(currentUser.username);
                     }
@@ -1256,8 +1263,10 @@
                         if (isAuthed()) {
                             loginButton.classList.add('hidden');
                             logoutArea.classList.remove('hidden');
-                            const roleText = currentUser.role === 'admin' ? '管理員' : '會員';
+                            const roleText = currentUser.role === 'admin' ? '一級管理者' : (currentUser.role === 'admin2' ? '二級管理者' : '會員');
                             if (userLabel) userLabel.textContent = `你好，${currentUser.username}（${roleText}）`;
+                            const umb = document.getElementById('userMgmtBtn');
+                            if (umb) umb.style.display = isAdmin() ? '' : 'none'; // 使用者管理：僅一級管理者
                         } else {
                             loginButton.classList.remove('hidden');
                             logoutArea.classList.add('hidden');
@@ -1266,7 +1275,7 @@
 
                         // 公會管理區僅管理員可見
                         if (guildArea) {
-                            if (isAdmin()) guildArea.classList.remove('hidden');
+                            if (isManager()) guildArea.classList.remove('hidden');
                             else guildArea.classList.add('hidden');
                         }
                     }
@@ -1377,6 +1386,103 @@
                         renderFlowers();
                         renderCompetitions();
                         renderGuildManager();
+                    }
+
+                    // ==========================================
+                    // 🔑 帳號設定：修改密碼（所有登入者）
+                    // ==========================================
+                    function showChangePasswordModal() {
+                        if (!isAuthed()) { notify('請先登入。'); return; }
+                        const html = `
+                            <div class="modal-header">
+                                <div class="modal-subtitle">帳號設定</div>
+                                <div class="modal-title">修改密碼</div>
+                            </div>
+                            <form onsubmit="submitChangePassword(event)" class="pw-form">
+                                <input type="password" id="cp-old" placeholder="目前密碼" required autocomplete="current-password">
+                                <input type="password" id="cp-new" placeholder="新密碼（至少 6 碼）" required autocomplete="new-password">
+                                <input type="password" id="cp-new2" placeholder="再次輸入新密碼" required autocomplete="new-password">
+                                <button type="submit" class="save-btn" style="width:100%; justify-content:center;">確認修改</button>
+                            </form>
+                        `;
+                        openModal(html);
+                    }
+                    async function submitChangePassword(event) {
+                        event.preventDefault();
+                        const oldPassword = document.getElementById('cp-old').value;
+                        const newPassword = document.getElementById('cp-new').value;
+                        const newPassword2 = document.getElementById('cp-new2').value;
+                        if (newPassword.length < 6) { notify('新密碼至少 6 碼。'); return; }
+                        if (newPassword !== newPassword2) { notify('兩次輸入的新密碼不一致。'); return; }
+                        if (oldPassword === newPassword) { notify('新密碼不可與目前密碼相同。'); return; }
+                        try {
+                            const r = await apiPost({ action: 'changePassword', oldPassword, newPassword });
+                            if (r && r.success) { closeModal(); notify('密碼已更新，下次請用新密碼登入。'); }
+                            else { notify('修改失敗：' + ((r && r.error) || '未知錯誤')); }
+                        } catch (e) { notify('修改失敗：' + e.message); }
+                    }
+
+                    // ==========================================
+                    // 使用者管理（僅一級管理者）：建二級管理者 / 重置密碼
+                    // ==========================================
+                    async function showUserManagement() {
+                        if (!isAdmin()) { notify('權限不足：僅一級管理者可使用。'); return; }
+                        let res;
+                        try { res = await apiPost({ action: 'listUsers' }); }
+                        catch (e) { notify('讀取帳號失敗：' + e.message); return; }
+                        if (!res || !res.success) { notify('讀取帳號失敗：' + ((res && res.error) || '未知錯誤')); return; }
+                        renderUserManagement(res.users || []);
+                    }
+                    function roleLabel_(r) { return r === 'admin' ? '一級管理者' : (r === 'admin2' ? '二級管理者' : '會員'); }
+                    function renderUserManagement(users) {
+                        const rows = users.map(u => {
+                            const isSelf = String(u.username) === String(currentUser.username);
+                            const badgeColor = u.role === 'admin' ? '#7c3aed' : (u.role === 'admin2' ? '#0ea5e9' : '#9ca3af');
+                            const action = isSelf
+                                ? '<span style="font-size:12px; color:#9ca3af;">本人</span>'
+                                : `<button class="edit-btn" style="color:#dc2626;" onclick="doResetPassword('${encodeURIComponent(u.username)}')">重置密碼</button>`;
+                            return `<div style="display:flex; justify-content:space-between; align-items:center; padding:8px 4px; border-bottom:1px dashed #eee;">
+                                        <div><span style="font-weight:bold;">${u.username}</span>
+                                            <span style="margin-left:8px; font-size:12px; color:#fff; background:${badgeColor}; padding:2px 8px; border-radius:10px;">${roleLabel_(u.role)}</span></div>
+                                        ${action}
+                                    </div>`;
+                        }).join('');
+                        const html = `
+                            <div class="modal-header">
+                                <div class="modal-subtitle">一級管理者專用</div>
+                                <div class="modal-title">使用者管理</div>
+                            </div>
+                            <div class="section-title">建立二級管理者</div>
+                            <form onsubmit="submitCreateManager(event)" class="pw-form">
+                                <input type="text" id="cm-username" placeholder="二級管理者帳號" required autocomplete="off">
+                                <input type="password" id="cm-password" placeholder="預設密碼（至少 6 碼）" required autocomplete="new-password">
+                                <button type="submit" class="save-btn" style="width:100%; justify-content:center;">建立二級管理者</button>
+                            </form>
+                            <div class="section-title">所有帳號（${users.length}）— 重置後密碼為 Pwd@123456</div>
+                            <div style="max-height:300px; overflow-y:auto; border:1px solid #eee; border-radius:6px;">${rows || '<div style="padding:12px; color:#999;">尚無帳號</div>'}</div>
+                        `;
+                        openModal(html);
+                    }
+                    async function submitCreateManager(event) {
+                        event.preventDefault();
+                        const username = document.getElementById('cm-username').value.trim();
+                        const password = document.getElementById('cm-password').value;
+                        if (!username) { notify('請輸入帳號。'); return; }
+                        if (password.length < 6) { notify('密碼至少 6 碼。'); return; }
+                        try {
+                            const r = await apiPost({ action: 'createManager', username, password });
+                            if (r && r.success) { notify('已建立二級管理者：' + username); showUserManagement(); }
+                            else { notify('建立失敗：' + ((r && r.error) || '未知錯誤')); }
+                        } catch (e) { notify('建立失敗：' + e.message); }
+                    }
+                    async function doResetPassword(encUsername) {
+                        const username = decodeURIComponent(encUsername);
+                        if (!(await showConfirm(`確定要將「${username}」的密碼重置為 Pwd@123456 嗎？`))) return;
+                        try {
+                            const r = await apiPost({ action: 'resetPassword', username });
+                            if (r && r.success) { notify(`已重置「${username}」的密碼為 Pwd@123456。`); }
+                            else { notify('重置失敗：' + ((r && r.error) || '未知錯誤')); }
+                        } catch (e) { notify('重置失敗：' + e.message); }
                     }
 
                     // 分頁切換
@@ -1680,7 +1786,7 @@ async function saveMember(event, id) {
 
                     function toggleFlowerForm() {
                         // 花朵僅管理員可新增
-                        if (!isAdmin()) { notify('權限不足：僅管理員可新增花朵。'); return; }
+                        if (!isManager()) { notify('權限不足：僅管理員可新增花朵。'); return; }
 
                         const formBox = document.getElementById('flower-form-box');
                         const btnText = document.getElementById('flower-btn-text');
@@ -1700,7 +1806,7 @@ async function saveMember(event, id) {
                         const formBox = document.getElementById('flower-form-box');
 
                         // 花朵新增/編輯都僅限管理員 (雙重防護)
-                        if (!isAdmin()) {
+                        if (!isManager()) {
                             notify('權限不足：僅管理員可操作花朵。');
                             return;
                         }
@@ -1745,7 +1851,7 @@ async function saveMember(event, id) {
                         event.preventDefault();
 
                         // 權限檢查：花朵新增/編輯都僅限管理員
-                        if (!isAdmin()) {
+                        if (!isManager()) {
                             notify('權限不足：只有管理員可以新增或修改花朵資料。');
                             return;
                         }
@@ -1819,7 +1925,7 @@ async function saveMember(event, id) {
                     }
 
                     function editFlower(id) {
-                        if (!isAdmin()) {
+                        if (!isManager()) {
                             notify('權限不足：僅管理員可編輯花朵。');
                             return;
                         }
@@ -1829,7 +1935,7 @@ async function saveMember(event, id) {
                     }
 
                     async function deleteFlower(id) {
-                        if (!isAdmin()) {
+                        if (!isManager()) {
                             notify('權限不足：僅管理員可刪除花朵。');
                             return;
                         }
@@ -2076,7 +2182,7 @@ function renderFlowers() {
 
     // 「新增花朵資料」按鈕：僅管理員顯示
     const addBtn = document.getElementById('add-flower-btn');
-    if (addBtn) addBtn.style.display = isAdmin() ? '' : 'none';
+    if (addBtn) addBtn.style.display = isManager() ? '' : 'none';
 
     flowers.forEach(flower => {
         const owners = members.filter(m => listHasFlower(m.ownedFlowers, flower.name)).map(m => m.gameName);
@@ -2089,7 +2195,7 @@ function renderFlowers() {
             : `<span class="owned-count is-empty" onclick="showFlowerDetail(${flower.id})">無</span>`;
 
         // ✨ 中間 👥 是批量派發；花朵全部僅管理員可操作
-        const actionButtons = isAdmin() ? `
+        const actionButtons = isManager() ? `
             <button class="edit-btn" onclick="editFlower(${flower.id})" title="編輯花朵">✏️</button>
             <button class="edit-btn" onclick="openDistributeModal(${flower.id})" title="管理擁有者" style="color:#0ea5e9;">👥</button>
             <button class="delete-btn" onclick="deleteFlower(${flower.id})" title="刪除花朵">🗑️</button>
@@ -2501,7 +2607,7 @@ function renderFlowers() {
 
                     // 新增公會 (僅管理員)
                     async function addGuild() {
-                        if (!isAdmin()) return notify('權限不足：僅管理員可新增公會。');
+                        if (!isManager()) return notify('權限不足：僅管理員可新增公會。');
 
                         const input = document.getElementById('new-guild-name');
                         const name = input.value.trim();
@@ -2525,7 +2631,7 @@ function renderFlowers() {
 
                     // 刪除公會 (僅管理員，後端以 name 比對)
                     async function deleteGuild(index) {
-                        if (!isAdmin()) return notify('權限不足：僅管理員可刪除公會。');
+                        if (!isManager()) return notify('權限不足：僅管理員可刪除公會。');
 
                         const guildName = guilds[index];
                         if (await showConfirm(`確定要刪除公會「${guildName}」嗎？\n(注意：現有成員的公會資料不會被清除，但選單中將不再顯示)`)) {
@@ -2613,7 +2719,7 @@ function renderFlowers() {
 let currentDistributeFlowerId = null;
 
 function openDistributeModal(flowerId) {
-    if (!isAdmin()) return notify('權限不足：僅管理員可批量派發擁有者。');
+    if (!isManager()) return notify('權限不足：僅管理員可批量派發擁有者。');
 
     const flower = flowers.find(f => f.id === flowerId);
     if (!flower) return;
@@ -2666,7 +2772,7 @@ function openDistributeModal(flowerId) {
 // 儲存派發結果 (管理員專用：對每個有變動的成員逐筆 updateItem)
 async function saveFlowerDistribution() {
     if (!currentDistributeFlowerId) return;
-    if (!isAdmin()) return notify('權限不足：僅管理員可批量派發擁有者。');
+    if (!isManager()) return notify('權限不足：僅管理員可批量派發擁有者。');
 
     const flower = flowers.find(f => f.id === currentDistributeFlowerId);
     if (!flower) return;
